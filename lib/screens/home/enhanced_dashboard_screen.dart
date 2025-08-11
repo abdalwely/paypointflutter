@@ -311,7 +311,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   }
 
   Widget _buildBalanceCard(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final localization = AppLocalizations.of(context);
 
     return Container(
@@ -355,7 +355,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                         ),
                       ),
                       error: (_, __) => const Text(
-                        '1,250.00 ريال',
+                        '1,250.00 ر��ال',
                         style: TextStyle(
                           color: AppTheme.primaryColor,
                           fontSize: 28,
