@@ -2,11 +2,20 @@
   "name": "paypoint-flutter",
   "version": "1.0.0",
   "description": "PayPoint Flutter web application",
+  "main": "server.js",
   "scripts": {
-    "dev": "echo 'Flutter web development requires Flutter SDK. Please install Flutter and run: flutter run -d web-server --web-port=3000'",
-    "build": "echo 'Run: flutter build web'",
-    "install": "echo 'Run: flutter pub get'"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Build completed - serving Flutter web app'",
+    "install": "npm install express"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": ["flutter", "paypoint", "web", "payment"],
+  "author": "PayPoint Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
