@@ -335,33 +335,13 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                       ),
                     ),
                     const SizedBox(height: 8),
-                    currentUserAsync.when(
-                      data: (user) => Text(
-                        '${user?.balance?.toStringAsFixed(2) ?? '1,250.00'} ريال',
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      loading: () => const Text(
-                        '1,250.00 ريال',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      error: (_, __) => const Text(
-                        '1,250.00 ر��ال',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
+                    Text(
+                      '${currentUser?.balance?.toStringAsFixed(2) ?? '1,250.00'} ريال',
+                      style: const TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
                       ),
                     ),
                   ],
