@@ -24,9 +24,7 @@ class MockData {
         phone: '+967 711 123 456',
         balance: 5000.00,
         isAdmin: true,
-        isActive: true,
         createdAt: DateTime.now().subtract(const Duration(days: 60)),
-        updatedAt: DateTime.now(),
         photoUrl: null,
       );
 
@@ -155,7 +153,7 @@ class MockData {
         },
         {
           'id': 'school-003',
-          'name': 'مدرسة النور',
+          'name': 'مدرسة الن��ر',
           'code': 'SCH-003',
           'location': 'تعز',
           'isActive': true,
@@ -192,7 +190,7 @@ class MockData {
         {
           'id': 'notif-001',
           'title': 'تم إضافة كروت جديدة',
-          'message': 'تم إضافة كروت يمن موبايل جديدة بقي��ة 1000 ريال',
+          'message': 'تم إضافة كروت يمن موبايل جديدة بقيمة 1000 ريال',
           'type': 'info',
           'isRead': false,
           'createdAt': DateTime.now().subtract(const Duration(hours: 1)),
