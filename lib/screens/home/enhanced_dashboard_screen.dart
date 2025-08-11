@@ -228,7 +228,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                       ),
                     ),
                     Text(
-                      user?.name ?? 'مستخدم',
+                      user?.name ?? 'أحمد محمد',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
