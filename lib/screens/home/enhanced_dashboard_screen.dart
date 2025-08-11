@@ -240,12 +240,83 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                 ),
               ],
             ),
-            loading: () => const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(Colors.white),
+            loading: () => Row(
+              children: [
+                AnimatedCard(
+                  padding: const EdgeInsets.all(4),
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.white,
+                    child: const Icon(
+                      Icons.person,
+                      color: AppTheme.primaryColor,
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localization.welcome,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    const Text(
+                      'أحمد محمد',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            error: (_, __) => const Icon(
-              Icons.error,
-              color: Colors.white,
+            error: (_, __) => Row(
+              children: [
+                AnimatedCard(
+                  padding: const EdgeInsets.all(4),
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.white,
+                    child: const Icon(
+                      Icons.person,
+                      color: AppTheme.primaryColor,
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localization.welcome,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    const Text(
+                      'أحمد محمد',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           
@@ -472,7 +543,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
               ),
               _buildQuickActionItem(
                 icon: Icons.history,
-                title: 'الأخيرة',
+                title: 'الأ��يرة',
                 color: AppTheme.warningColor,
                 onTap: _showRecent,
               ),
