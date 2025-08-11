@@ -39,7 +39,7 @@ class MockData {
           userId: 'mock-user-123',
           type: TransactionType.networkRecharge,
           amount: 1000.0,
-          status: TransactionStatus.completed,
+          status: TransactionStatus.success,
           details: {
             'network': 'yemen_mobile',
             'networkName': 'يمن موبايل',
@@ -210,7 +210,7 @@ class MockData {
         {
           'id': 'notif-003',
           'title': 'فشل في المعاملة',
-          'message': 'فشل في شحن كرت MTN، يرجى المحاولة مرة أخرى',
+          'message': 'فشل في شحن كرت MTN، يرجى ��لمحاولة مرة أخرى',
           'type': 'error',
           'isRead': true,
           'createdAt': DateTime.now().subtract(const Duration(days: 1)),
