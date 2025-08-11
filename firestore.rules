@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             resource.data.isAdmin == true;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && 
+             request.auth.uid == userId;
+    }
+    
+    function isValidEmail(email) {
+      return email.matches('.*@.*\\..*');
+    }
+    
+    function isValidPhone(phone) {
+      return phone.matches('^[+]?[0-9]+$') && 
+             phone.size() >= 9 && 
+             phone.size() <= 15;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && 
+                       isOwner(userId) &&
+                       isValidEmail(resource.data.email) &&
+                       isValidPhone(resource.data.phone) &&
+                       resource.data.keys().hasAll(['name', 'email', 'phone', 'createdAt']) &&
+                       resource.data.balance == 0.0 &&
+                       resource.data.isAdmin == false;
+      allow update: if isOwner(userId) &&
+                       // Users can't modify their own isAdmin status
+                       resource.data.isAdmin == request.resource.data.isAdmin &&
+                       // Balance can only be modified by admin or system
+                       (resource.data.balance == request.resource.data.balance || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // Cards collection
+    match /cards/{cardId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() &&
+                       resource.data.keys().hasAll(['network', 'value', 'code', 'serial', 'status', 'createdAt']) &&
+                       resource.data.status == 'available' &&
+                       resource.data.soldAt == null &&
+                       resource.data.soldToUserId == null;
+      allow update: if isAdmin() ||
+                       // Allow system to mark cards as sold
+                       (isAuthenticated() && 
+                        resource.data.status == 'available' &&
+                        request.resource.data.status == 'sold' &&
+                        request.resource.data.soldToUserId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+    
+    // Transactions collection
+    match /transactions/{transactionId} {
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid &&
+                       resource.data.keys().hasAll(['userId', 'type', 'amount', 'details', 'status', 'createdAt']) &&
+                       resource.data.status == 'pending' &&
+                       resource.data.amount > 0;
+      allow update: if isAdmin() ||
+                       // Users can only cancel their own pending transactions
+                       (isOwner(resource.data.userId) && 
+                        resource.data.status == 'pending' &&
+                        request.resource.data.status == 'cancelled');
+      allow delete: if isAdmin();
+    }
+    
+    // Schools collection
+    match /schools/{schoolId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() &&
+                       resource.data.keys().hasAll(['name', 'code', 'address', 'phone', 'email', 'isActive', 'createdAt']) &&
+                       isValidEmail(resource.data.email) &&
+                       isValidPhone(resource.data.phone);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // System settings collection (Admin only)
+    match /settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Analytics collection (Admin only)
+    match /analytics/{analyticsId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      allow create: if isAdmin() ||
+                       (isAuthenticated() && 
+                        resource.data.userId == request.auth.uid);
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       // Users can only mark notifications as read
+                       resource.data.keys().hasOnly(['isRead', 'readAt']);
+      allow delete: if isAdmin() ||
+                       (isAuthenticated() && 
+                        resource.data.userId == request.auth.uid);
+    }
+    
+    // Logs collection (Admin only for security)
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // API Keys collection (Admin only)
+    match /apiKeys/{keyId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Backup collection (Admin only)
+    match /backups/{backupId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
