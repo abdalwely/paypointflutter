@@ -64,7 +64,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
 
   @override
   Widget build(BuildContext context) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final isRTL = ref.watch(isRTLProvider);
     final localization = AppLocalizations.of(context);
 
@@ -595,7 +595,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   Widget _buildServicesGrid(BuildContext context) {
     final services = [
       {
-        'title': 'شحن كروت ��لشبكة',
+        'title': 'شحن كروت الشبكة',
         'subtitle': 'يمن موبايل، MTN، سبأفون، واي',
         'icon': Icons.sim_card,
         'color': AppTheme.primaryColor,
