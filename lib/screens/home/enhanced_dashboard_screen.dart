@@ -192,55 +192,54 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // User Info
-          currentUserAsync.when(
-            data: (user) => Row(
-              children: [
-                AnimatedCard(
-                  padding: const EdgeInsets.all(4),
-                  child: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.white,
-                    child: user?.photoUrl != null
-                        ? ClipOval(
-                            child: Image.network(
-                              user!.photoUrl!,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.person,
-                            color: AppTheme.primaryColor,
-                            size: 30,
+          Row(
+            children: [
+              AnimatedCard(
+                padding: const EdgeInsets.all(4),
+                child: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Colors.white,
+                  child: currentUser?.photoUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            currentUser!.photoUrl!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
                           ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          color: AppTheme.primaryColor,
+                          size: 30,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localization.welcome,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localization.welcome,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontFamily: 'Cairo',
-                      ),
+                  Text(
+                    currentUser?.name ?? 'أحمد محمد',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
                     ),
-                    Text(
-                      user?.name ?? 'أحمد محمد',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
+          ),
             loading: () => Row(
               children: [
                 AnimatedCard(
