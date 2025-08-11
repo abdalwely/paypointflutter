@@ -288,25 +288,21 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
               const SizedBox(width: 8),
               
               // Admin Panel (if admin)
-              currentUserAsync.when(
-                data: (user) => user?.isAdmin == true
-                    ? AnimatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(
-                            AdminDashboardScreen.routeName,
-                          );
-                        },
-                        backgroundColor: AppTheme.accentColor,
-                        child: const Icon(
-                          Icons.admin_panel_settings,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+              currentUser?.isAdmin == true
+                  ? AnimatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(
+                          AdminDashboardScreen.routeName,
+                        );
+                      },
+                      backgroundColor: AppTheme.accentColor,
+                      child: const Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ],
           ),
         ],
