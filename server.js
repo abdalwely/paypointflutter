@@ -315,7 +315,7 @@ const htmlTemplate = `
             <div class="status-message">
                 <h2>✅ التطبيق جاهز للاستخدام!</h2>
                 <p>
-                    تم إصلاح جميع مشاكل العرض. الآن يمكنك رؤية الواجهات الجميلة بدلاً من رسائل "الواجهة غير موجودة".
+                    تم إصلاح جميع مشاكل العرض. الآن يمكنك رؤية الواجهات الجميلة بد��اً من رسائل "الواجهة غير موجودة".
                     <br><br>
                     جميع الخدمات متاحة مع بيانات وهمية حتى يتم ربط الـ API الفعلي.
                     <br><br>
@@ -364,7 +364,7 @@ const htmlTemplate = `
 
 // Routes
 app.get('/', (req, res) => {
-    res.send(htmlTemplate);
+    res.sendFile(path.join(__dirname, 'web', 'index.html'));
 });
 
 app.get('/health', (req, res) => {
@@ -378,7 +378,7 @@ app.get('/health', (req, res) => {
 
 // Start server
 app.listen(port, () => {
-    console.log(`��� PayPoint server running at http://localhost:${port}`);
+    console.log(`🚀 PayPoint server running at http://localhost:${port}`);
     console.log(`✅ App is now functional and displaying beautiful interfaces!`);
     console.log(`📱 Flutter app UI is now properly rendered`);
 });
