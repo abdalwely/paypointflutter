@@ -1,26 +1,30 @@
 {
-  "name": "paypoint-flutter",
+  "name": "paypoint-flutter-dev",
   "version": "1.0.0",
-  "description": "PayPoint Flutter web application",
-  "main": "server.js",
+  "description": "PayPoint Flutter Development Helper",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
-    "build": "echo 'Build completed - serving Flutter web app'",
-    "install": "npm install express"
+    "flutter-doctor": "flutter doctor",
+    "get-deps": "flutter pub get",
+    "run-web": "flutter run -d web-server --web-port=3000",
+    "run-android": "flutter run -d android",
+    "run-ios": "flutter run -d ios",
+    "build-web": "flutter build web",
+    "build-android": "flutter build apk",
+    "clean": "flutter clean",
+    "test": "flutter test"
   },
-  "dependencies": {
-    "express": "^4.21.2"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paypoint/flutter-app.git"
   },
   "keywords": [
     "flutter",
+    "dart", 
     "paypoint",
-    "web",
-    "payment"
+    "payment",
+    "mobile",
+    "web"
   ],
   "author": "PayPoint Team",
-  "license": "MIT",
-  "engines": {
-    "node": ">=14.0.0"
-  }
+  "license": "MIT"
 }
