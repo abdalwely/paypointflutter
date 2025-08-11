@@ -88,7 +88,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _navigateToHome() {
-    Navigator.of(context).pushReplacementNamed(DashboardScreen.routeName);
+    Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
   }
 
   void _navigateToLogin() {
