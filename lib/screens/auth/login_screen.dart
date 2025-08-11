@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
-import '../home/dashboard_screen.dart';
+import '../home/enhanced_dashboard_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -41,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed(DashboardScreen.routeName);
+        Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
       }
     } catch (e) {
       if (mounted) {
@@ -219,7 +219,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               );
                             },
                             child: const Text(
-                              'نسيت كلمة المرور؟',
+                              'نسيت كل��ة المرور؟',
                               style: TextStyle(
                                 color: AppConstants.primaryColor,
                                 fontFamily: 'Cairo',
