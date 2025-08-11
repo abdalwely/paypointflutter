@@ -125,7 +125,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   }
 
   Widget _buildDashboardPage(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final localization = AppLocalizations.of(context);
 
     return Container(
@@ -596,7 +596,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
     final services = [
       {
         'title': 'شحن كروت الشبكة',
-        'subtitle': 'يمن موبايل، MTN، سبأفون، واي',
+        'subtitle': 'يمن ��وبايل، MTN، سبأفون، واي',
         'icon': Icons.sim_card,
         'color': AppTheme.primaryColor,
         'route': NetworkRechargeScreen.routeName,
