@@ -42,7 +42,7 @@ class MockData {
           status: TransactionStatus.completed,
           details: {
             'network': 'yemen_mobile',
-            'networkName': 'يمن موبايل',
+            'networkName': 'ي��ن موبايل',
             'value': 1000,
             'cardCode': '123456789012345',
             'serialNumber': '987654321',
@@ -67,7 +67,7 @@ class MockData {
         TransactionModel(
           id: 'txn-003',
           userId: 'mock-user-123',
-          type: TransactionType.waterPayment,
+          type: TransactionType.water,
           amount: 250.0,
           status: TransactionStatus.pending,
           details: {
@@ -202,7 +202,7 @@ class MockData {
         {
           'id': 'notif-002',
           'title': 'تم إكمال المعاملة',
-          'message': 'تم شحن الكهرباء بنجاح للعداد رقم 123456789',
+          'message': 'ت�� شحن الكهرباء بنجاح للعداد رقم 123456789',
           'type': 'success',
           'isRead': false,
           'createdAt': DateTime.now().subtract(const Duration(hours: 3)),
