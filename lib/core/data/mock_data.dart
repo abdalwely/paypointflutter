@@ -53,9 +53,9 @@ class MockData {
         TransactionModel(
           id: 'txn-002',
           userId: 'mock-user-123',
-          type: TransactionType.electricityPayment,
+          type: TransactionType.electricity,
           amount: 500.0,
-          status: TransactionStatus.completed,
+          status: TransactionStatus.success,
           details: {
             'meterNumber': '123456789',
             'customerName': 'أحمد محمد علي',
