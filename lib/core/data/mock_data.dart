@@ -12,9 +12,7 @@ class MockData {
         phone: '+967 777 123 456',
         balance: 1250.00,
         isAdmin: false,
-        isActive: true,
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        updatedAt: DateTime.now(),
         photoUrl: null,
       );
 
@@ -194,7 +192,7 @@ class MockData {
         {
           'id': 'notif-001',
           'title': 'تم إضافة كروت جديدة',
-          'message': 'تم إضافة كروت يمن موبايل جديدة بقيمة 1000 ريال',
+          'message': 'تم إضافة كروت يمن موبايل جديدة بقي��ة 1000 ريال',
           'type': 'info',
           'isRead': false,
           'createdAt': DateTime.now().subtract(const Duration(hours: 1)),
@@ -210,7 +208,7 @@ class MockData {
         {
           'id': 'notif-003',
           'title': 'فشل في المعاملة',
-          'message': 'فشل في شحن كرت MTN، يرجى ��لمحاولة مرة أخرى',
+          'message': 'فشل في شحن كرت MTN، يرجى المحاولة مرة أخرى',
           'type': 'error',
           'isRead': true,
           'createdAt': DateTime.now().subtract(const Duration(days: 1)),
