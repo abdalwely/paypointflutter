@@ -752,7 +752,7 @@
                                 <div class="service-icon" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">⚡</div>
                                 <div class="service-content">
                                     <div class="service-title">شحن الكهرباء</div>
-                                    <div class="service-subtitle">دفع فواتير الكهرباء</div>
+                                    <div class="service-subtitle">دفع فوات��ر الكهرباء</div>
                                 </div>
                                 <div class="service-arrow">◀</div>
                             </div>
@@ -789,12 +789,12 @@
 
                 <nav class="bottom-nav">
                     <a href="#" class="nav-item active" onclick="setActiveTab(this, 'home')">
-                        <div class="nav-item-icon">���</div>
+                        <div class="nav-item-icon">🏠</div>
                         <div class="nav-item-label">الرئيسية</div>
                     </a>
                     <a href="#" class="nav-item" onclick="setActiveTab(this, 'transactions')">
                         <div class="nav-item-icon">📊</div>
-                        <div class="nav-item-label">المعاملات</div>
+                        <div class="nav-item-label">المعا��لات</div>
                     </a>
                     <a href="#" class="nav-item" onclick="setActiveTab(this, 'profile')">
                         <div class="nav-item-icon">👤</div>
@@ -901,7 +901,7 @@
                         ">
                             <h2 style="color: #28a745; margin-bottom: 1rem;">✅ التطبيق جاهز!</h2>
                             <p style="line-height: 1.6;">
-                                تم إصلاح جم��ع الأخطاء بنجاح. التطبيق يعمل الآن بدون مشاكل.
+                                تم إصلاح جميع الأخطاء بنجاح. التطبيق يعمل الآن بدون مشاكل.
                                 <br><br>
                                 جميع الواجهات متاحة وجاهزة للاستخدام.
                             </p>
@@ -965,7 +965,7 @@
         }
 
         function toggleLanguage() {
-            showNotification('سيتم تغيير ال��غة', 'info');
+            showNotification('سيتم تغيير اللغة', 'info');
         }
 
         function showNotifications() {
@@ -973,15 +973,36 @@
         }
 
         function setActiveTab(element, tab) {
-            // Remove active class from all nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Add active class to clicked item
-            element.classList.add('active');
-            
-            showNotification(`تم الانتقال إلى تبويب: ${element.querySelector('.nav-item-label').textContent}`, 'success');
+            try {
+                // Remove active class from all nav items
+                const navItems = document.querySelectorAll('.nav-item');
+                if (navItems) {
+                    navItems.forEach(item => {
+                        if (item && item.classList) {
+                            item.classList.remove('active');
+                        }
+                    });
+                }
+
+                // Add active class to clicked item
+                if (element && element.classList) {
+                    element.classList.add('active');
+                }
+
+                // Show notification with safe text extraction
+                let tabName = tab || 'غير محدد';
+                if (element) {
+                    const labelElement = element.querySelector('.nav-item-label');
+                    if (labelElement && labelElement.textContent) {
+                        tabName = labelElement.textContent;
+                    }
+                }
+
+                showNotification(`تم الانتقال إلى تبويب: ${tabName}`, 'success');
+            } catch (error) {
+                console.error('Error setting active tab:', error);
+                showNotification('تم تغيير التبويب', 'success');
+            }
         }
 
         function showNotification(message, type = 'info') {
