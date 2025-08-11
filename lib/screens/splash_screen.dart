@@ -4,7 +4,7 @@ import 'package:lottie/lottie.dart';
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 import 'auth/login_screen.dart';
-import 'home/dashboard_screen.dart';
+import 'home/enhanced_dashboard_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   static const String routeName = '/splash';
