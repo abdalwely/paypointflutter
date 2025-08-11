@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/localization_provider.dart';
+import '../../providers/mock_data_provider.dart';
 import '../../widgets/animated_widgets.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
 import '../services/network_recharge_screen.dart';
@@ -63,7 +64,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
 
   @override
   Widget build(BuildContext context) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final isRTL = ref.watch(isRTLProvider);
     final localization = AppLocalizations.of(context);
 
@@ -124,7 +125,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   }
 
   Widget _buildDashboardPage(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final localization = AppLocalizations.of(context);
 
     return Container(
@@ -182,7 +183,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final localization = AppLocalizations.of(context);
 
     return Container(
@@ -191,62 +192,54 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // User Info
-          currentUserAsync.when(
-            data: (user) => Row(
-              children: [
-                AnimatedCard(
-                  padding: const EdgeInsets.all(4),
-                  child: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.white,
-                    child: user?.photoUrl != null
-                        ? ClipOval(
-                            child: Image.network(
-                              user!.photoUrl!,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.person,
-                            color: AppTheme.primaryColor,
-                            size: 30,
+          Row(
+            children: [
+              AnimatedCard(
+                padding: const EdgeInsets.all(4),
+                child: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Colors.white,
+                  child: currentUser?.photoUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            currentUser!.photoUrl!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
                           ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          color: AppTheme.primaryColor,
+                          size: 30,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localization.welcome,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localization.welcome,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontFamily: 'Cairo',
-                      ),
+                  Text(
+                    currentUser?.name ?? 'أحمد محمد',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
                     ),
-                    Text(
-                      user?.name ?? 'مستخدم',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            loading: () => const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(Colors.white),
-            ),
-            error: (_, __) => const Icon(
-              Icons.error,
-              color: Colors.white,
-            ),
+                  ),
+                ],
+              ),
+            ],
+          ),
           ),
           
           // Actions
@@ -295,25 +288,21 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
               const SizedBox(width: 8),
               
               // Admin Panel (if admin)
-              currentUserAsync.when(
-                data: (user) => user?.isAdmin == true
-                    ? AnimatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(
-                            AdminDashboardScreen.routeName,
-                          );
-                        },
-                        backgroundColor: AppTheme.accentColor,
-                        child: const Icon(
-                          Icons.admin_panel_settings,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+              currentUser?.isAdmin == true
+                  ? AnimatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(
+                          AdminDashboardScreen.routeName,
+                        );
+                      },
+                      backgroundColor: AppTheme.accentColor,
+                      child: const Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ],
           ),
         ],
@@ -322,7 +311,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   }
 
   Widget _buildBalanceCard(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(enhancedCurrentUserProvider);
     final localization = AppLocalizations.of(context);
 
     return Container(
@@ -346,26 +335,13 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                       ),
                     ),
                     const SizedBox(height: 8),
-                    currentUserAsync.when(
-                      data: (user) => Text(
-                        '${user?.balance?.toStringAsFixed(2) ?? '0.00'} ريال',
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      loading: () => ShimmerLoading(
-                       child: Container(
-                        width: 120,
-                        height: 28,
-                        color: Colors.grey,
-                       ),
-                      ),
-                      error: (_, __) => const Text(
-                        'خطأ في تحميل البيانات',
-                        style: TextStyle(fontFamily: 'Cairo'),
+                    Text(
+                      '${currentUser?.balance?.toStringAsFixed(2) ?? '1,250.00'} ريال',
+                      style: const TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
                       ),
                     ),
                   ],

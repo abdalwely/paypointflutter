@@ -1,0 +1,30 @@
+{
+  "name": "paypoint-flutter-dev",
+  "version": "1.0.0",
+  "description": "PayPoint Flutter Development Helper",
+  "scripts": {
+    "flutter-doctor": "flutter doctor",
+    "get-deps": "flutter pub get",
+    "run-web": "flutter run -d web-server --web-port=3000",
+    "run-android": "flutter run -d android",
+    "run-ios": "flutter run -d ios",
+    "build-web": "flutter build web",
+    "build-android": "flutter build apk",
+    "clean": "flutter clean",
+    "test": "flutter test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paypoint/flutter-app.git"
+  },
+  "keywords": [
+    "flutter",
+    "dart", 
+    "paypoint",
+    "payment",
+    "mobile",
+    "web"
+  ],
+  "author": "PayPoint Team",
+  "license": "MIT"
+}
