@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/localization_provider.dart';
+import '../../providers/mock_data_provider.dart';
 import '../../widgets/animated_widgets.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
 import '../services/network_recharge_screen.dart';
@@ -543,7 +544,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
               ),
               _buildQuickActionItem(
                 icon: Icons.history,
-                title: 'الأ��يرة',
+                title: 'الأخيرة',
                 color: AppTheme.warningColor,
                 onTap: _showRecent,
               ),
@@ -594,7 +595,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
   Widget _buildServicesGrid(BuildContext context) {
     final services = [
       {
-        'title': 'شحن كروت الشبكة',
+        'title': 'شحن كروت ��لشبكة',
         'subtitle': 'يمن موبايل، MTN، سبأفون، واي',
         'icon': Icons.sim_card,
         'color': AppTheme.primaryColor,
