@@ -1,0 +1,12 @@
+{
+  "name": "paypoint-flutter",
+  "version": "1.0.0",
+  "description": "PayPoint Flutter web application",
+  "scripts": {
+    "dev": "echo 'Flutter web development requires Flutter SDK. Please install Flutter and run: flutter run -d web-server --web-port=3000'",
+    "build": "echo 'Run: flutter build web'",
+    "install": "echo 'Run: flutter pub get'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
