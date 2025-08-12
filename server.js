@@ -693,7 +693,7 @@ const futuristicTemplate = `
             <div class="balance-amount" id="balanceAmount">50,000.00 ريال</div>
             <div class="balance-actions">
                 <button class="btn btn-primary" onclick="openModal('topupModal')">
-                    ➕ شحن ��لمحفظة
+                    ➕ شحن المحفظة
                 </button>
                 <button class="btn btn-secondary" onclick="openModal('transferModal')">
                     📤 تحويل
@@ -1014,11 +1014,18 @@ const futuristicTemplate = `
             }
         }
         
-        // Update balance
+        // Update balance with error handling
         function updateBalance(newBalance) {
-            currentBalance = newBalance;
-            document.getElementById('balanceAmount').textContent = 
-                new Intl.NumberFormat('ar-SA').format(newBalance) + ' ريال';
+            try {
+                currentBalance = newBalance;
+                const balanceElement = document.getElementById('balanceAmount');
+                if (balanceElement) {
+                    balanceElement.textContent =
+                        new Intl.NumberFormat('ar-SA').format(newBalance) + ' ريال';
+                }
+            } catch (error) {
+                console.warn('Error updating balance:', error);
+            }
         }
         
         // Process transactions
@@ -1178,7 +1185,7 @@ const futuristicTemplate = `
                 
                 showSuccess(\`
                     <div class="success-message">
-                        تم دفع الرسوم المدرسية بنجاح<br>
+                        تم دفع الرسوم المد��سية بنجاح<br>
                         اسم الطالب: \${student}<br>
                         المدرسة: \${school}<br>
                         المبلغ: \${amount} ريال<br>
