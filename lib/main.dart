@@ -58,8 +58,17 @@ Future<void> main() async {
     // Set app configuration
     await _setAppConfiguration();
     
+    // طباعة بيانات الأدمن في الترمينال
     print('🚀 Starting PayPoint App with Mock Data...');
-    
+    print('');
+    print('📧 ═══════════════ بيانات الأدمن ═══════════════');
+    print('📧 البريد الإلكتروني: ${AppConfig.defaultAdminEmail}');
+    print('🔑 كلمة المرور: ${AppConfig.defaultAdminPassword}');
+    print('👤 اسم المسؤول: ${AppConfig.defaultAdminName}');
+    print('📱 رقم الهاتف: ${AppConfig.defaultAdminPhone}');
+    print('📧 ══════════════════════════════════════════════');
+    print('');
+
     runApp(
       const ProviderScope(
         child: PayPointApp(),
