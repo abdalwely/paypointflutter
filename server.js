@@ -705,7 +705,7 @@ const futuristicTemplate = `
         <div class="services-grid">
             <div class="service-card" onclick="openModal('networkModal')">
                 <div class="service-icon network">📱</div>
-                <div class="service-title">ش��ن كروت الشبكة</div>
+                <div class="service-title">شحن كروت الشبكة</div>
                 <div class="service-subtitle">يمن موبايل، MTN، سبأفون</div>
             </div>
             
@@ -724,7 +724,7 @@ const futuristicTemplate = `
             <div class="service-card" onclick="openModal('waterModal')">
                 <div class="service-icon water">💧</div>
                 <div class="service-title">دفع فاتورة المياه</div>
-                <div class="service-subtitle">تسديد فواتير المياه</div>
+                <div class="service-subtitle">تسديد فواتير الميا��</div>
             </div>
             
             <div class="service-card" onclick="openModal('schoolModal')">
@@ -1134,7 +1134,7 @@ const futuristicTemplate = `
                 updateBalance(currentBalance - amount);
                 
                 const transaction = {
-                    type: 'دفع كهر��اء',
+                    type: 'دفع كهرباء',
                     amount: amount,
                     timestamp: new Date().toLocaleString('ar-SA')
                 };
@@ -1225,8 +1225,17 @@ const futuristicTemplate = `
         }
         
         function showSuccess(content) {
-            document.getElementById('successDetails').innerHTML = content;
-            openModal('successModal');
+            try {
+                const successElement = document.getElementById('successDetails');
+                if (successElement) {
+                    successElement.innerHTML = content || 'تمت العملية بنجاح';
+                }
+                openModal('successModal');
+            } catch (error) {
+                console.warn('Error showing success message:', error);
+                // Fallback to alert if modal fails
+                alert('تمت العملية بنجاح');
+            }
         }
         
         // Initialize app when page loads
@@ -1392,7 +1401,7 @@ app.listen(port, () => {
     console.log('  ✅ دفع فواتير المياه');
     console.log('  ✅ دفع الرسوم المدرسية');
     console.log('  ✅ لوحة التحكم الإدارية');
-    console.log('  ✅ إحصائيات في الوقت الفعلي');
+    console.log('  ✅ إحصائيا�� في الوقت الفعلي');
 });
 
 module.exports = app;
