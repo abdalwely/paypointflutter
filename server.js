@@ -788,7 +788,7 @@ const futuristicTemplate = `
     <div class="modal" id="networkModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('networkModal')">×</button>
-            <div class="modal-title">شحن كروت الشبكة</div>
+            <div class="modal-title">شحن كروت الشب��ة</div>
             <form onsubmit="processNetworkRecharge(event)">
                 <div class="form-group">
                     <label class="form-label">الشبكة</label>
@@ -1189,9 +1189,22 @@ const futuristicTemplate = `
         
         // Close modals when clicking outside
         window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
+            if (event.target && event.target.classList && event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
             }
+        });
+
+        // Prevent default behavior for empty anchors
+        document.addEventListener('click', function(event) {
+            if (event.target.tagName === 'A' && (event.target.getAttribute('href') === '#' || event.target.getAttribute('href') === '')) {
+                event.preventDefault();
+            }
+        });
+
+        // Add error handling for any unhandled JavaScript errors
+        window.addEventListener('error', function(event) {
+            console.warn('JavaScript Error caught:', event.error);
+            return true; // Prevent error from breaking the app
         });
         
         console.log('🚀 PayPoint 2080 - نظام الدفع المستقبلي محمل بنجاح!');
