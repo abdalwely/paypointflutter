@@ -19,12 +19,15 @@
   },
   "keywords": [
     "flutter",
-    "dart", 
+    "dart",
     "paypoint",
     "payment",
     "mobile",
     "web"
   ],
   "author": "PayPoint Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
