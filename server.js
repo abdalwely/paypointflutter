@@ -964,14 +964,28 @@ const futuristicTemplate = `
             }, 3000);
         }
         
-        // Update statistics
+        // Update statistics with error handling
         function updateStats() {
-            if (isAdmin) {
-                document.getElementById('totalUsers').textContent = '1,247';
-                document.getElementById('totalTransactions').textContent = transactionHistory.length;
-                document.getElementById('totalRevenue').textContent = '89,456';
-                document.getElementById('availableCards').textContent = '2,450';
-                updateTransactionList();
+            try {
+                if (isAdmin) {
+                    const elements = {
+                        'totalUsers': '1,247',
+                        'totalTransactions': transactionHistory.length,
+                        'totalRevenue': '89,456',
+                        'availableCards': '2,450'
+                    };
+
+                    Object.keys(elements).forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.textContent = elements[id];
+                        }
+                    });
+
+                    updateTransactionList();
+                }
+            } catch (error) {
+                console.warn('Error updating stats:', error);
             }
         }
         
@@ -1185,7 +1199,7 @@ const futuristicTemplate = `
                 
                 showSuccess(\`
                     <div class="success-message">
-                        تم دفع الرسوم المد��سية بنجاح<br>
+                        تم دفع الرسوم المدرسية بنجاح<br>
                         اسم الطالب: \${student}<br>
                         المدرسة: \${school}<br>
                         المبلغ: \${amount} ريال<br>
