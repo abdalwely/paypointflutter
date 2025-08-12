@@ -705,7 +705,7 @@ const futuristicTemplate = `
         <div class="services-grid">
             <div class="service-card" onclick="openModal('networkModal')">
                 <div class="service-icon network">📱</div>
-                <div class="service-title">شحن كروت الشبكة</div>
+                <div class="service-title">ش��ن كروت الشبكة</div>
                 <div class="service-subtitle">يمن موبايل، MTN، سبأفون</div>
             </div>
             
@@ -989,20 +989,30 @@ const futuristicTemplate = `
             }
         }
         
-        // Update transaction list
+        // Update transaction list with error handling
         function updateTransactionList() {
-            const container = document.getElementById('transactionList');
-            container.innerHTML = '';
-            
-            transactionHistory.slice(0, 5).forEach(transaction => {
-                const item = document.createElement('div');
-                item.className = 'transaction-item';
-                item.innerHTML = \`
-                    <span>\${transaction.type}</span>
-                    <span style="color: var(--neon-green);">\${transaction.amount} ريال</span>
-                \`;
-                container.appendChild(item);
-            });
+            try {
+                const container = document.getElementById('transactionList');
+                if (!container) return;
+
+                container.innerHTML = '';
+
+                transactionHistory.slice(0, 5).forEach(transaction => {
+                    try {
+                        const item = document.createElement('div');
+                        item.className = 'transaction-item';
+                        item.innerHTML = \`
+                            <span>\${transaction.type || 'معاملة'}</span>
+                            <span style="color: var(--neon-green);">\${transaction.amount || 0} ريال</span>
+                        \`;
+                        container.appendChild(item);
+                    } catch (itemError) {
+                        console.warn('Error creating transaction item:', itemError);
+                    }
+                });
+            } catch (error) {
+                console.warn('Error updating transaction list:', error);
+            }
         }
         
         // Modal functions with error handling
@@ -1124,7 +1134,7 @@ const futuristicTemplate = `
                 updateBalance(currentBalance - amount);
                 
                 const transaction = {
-                    type: 'دفع كهرباء',
+                    type: 'دفع كهر��اء',
                     amount: amount,
                     timestamp: new Date().toLocaleString('ar-SA')
                 };
