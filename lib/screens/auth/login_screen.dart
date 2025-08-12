@@ -43,6 +43,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // التحقق من بيانات الأدمن المحددة مسبقاً
       if (email == AppConfig.defaultAdminEmail && password == AppConfig.defaultAdminPassword) {
         // تسجيل دخول الأدمن بنجاح
+        UserSession.login(
+          ref,
+          email: email,
+          name: AppConfig.defaultAdminName,
+          isAdmin: true,
+          balance: 50000.0, // رصيد ابتدائي للأدمن
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -70,6 +78,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } catch (e) {
         // إذا فشل Firebase، تسجيل دخول بأي بيانات صحيحة (للتطوير)
         if (email.contains('@') && password.length >= 6) {
+          // تسجيل دخول مستخدم عادي
+          String userName = email.split('@')[0];
+          if (userName.contains('.')) {
+            userName = userName.replaceAll('.', ' ');
+          }
+
+          UserSession.login(
+            ref,
+            email: email,
+            name: userName,
+            isAdmin: false,
+            balance: 5000.0, // رصيد ابتدائي للمستخدم العادي
+          );
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -85,7 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // عرض رسالة خطأ
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text('خطأ في تسجيل الدخول: تحقق من البيانات المدخلة'),
                 backgroundColor: Colors.red,
                 duration: Duration(seconds: 3),
