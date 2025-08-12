@@ -724,7 +724,7 @@ const futuristicTemplate = `
             <div class="service-card" onclick="openModal('waterModal')">
                 <div class="service-icon water">💧</div>
                 <div class="service-title">دفع فاتورة المياه</div>
-                <div class="service-subtitle">تسديد فواتير الميا��</div>
+                <div class="service-subtitle">تسديد فواتير الميا����</div>
             </div>
             
             <div class="service-card" onclick="openModal('schoolModal')">
@@ -878,7 +878,7 @@ const futuristicTemplate = `
                     <input type="text" class="form-input" id="waterAccount" placeholder="رقم حساب المياه" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">المبلغ</label>
+                    <label class="form-label">ال��بلغ</label>
                     <input type="number" class="form-input" id="waterAmount" placeholder="المبلغ بالريال" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
@@ -901,7 +901,7 @@ const futuristicTemplate = `
                     <label class="form-label">المدرسة</label>
                     <select class="form-select" id="schoolName" required>
                         <option value="">اختر المدرسة</option>
-                        <option value="school1">مدرسة الأمل</option>
+                        <option value="school1">مدرسة ال��مل</option>
                         <option value="school2">مدرسة النهضة</option>
                         <option value="school3">مدرسة المستقبل</option>
                     </select>
@@ -1066,7 +1066,7 @@ const futuristicTemplate = `
                 updateBalance(currentBalance - amount);
                 
                 const transaction = {
-                    type: 'شحن كرت شبكة',
+                    type: 'شحن كرت شبك��',
                     amount: amount,
                     timestamp: new Date().toLocaleString('ar-SA')
                 };
@@ -1255,11 +1255,41 @@ const futuristicTemplate = `
             }
         });
 
-        // Add error handling for any unhandled JavaScript errors
+        // Add comprehensive error handling for any unhandled JavaScript errors
         window.addEventListener('error', function(event) {
             console.warn('JavaScript Error caught:', event.error);
             return true; // Prevent error from breaking the app
         });
+
+        // Override querySelector to handle invalid selectors
+        const originalQuerySelector = Document.prototype.querySelector;
+        Document.prototype.querySelector = function(selector) {
+            try {
+                if (!selector || selector === '#' || selector === '') {
+                    console.warn('Invalid selector detected:', selector);
+                    return null;
+                }
+                return originalQuerySelector.call(this, selector);
+            } catch (error) {
+                console.warn('querySelector error prevented:', error);
+                return null;
+            }
+        };
+
+        // Override querySelectorAll as well
+        const originalQuerySelectorAll = Document.prototype.querySelectorAll;
+        Document.prototype.querySelectorAll = function(selector) {
+            try {
+                if (!selector || selector === '#' || selector === '') {
+                    console.warn('Invalid selector detected in querySelectorAll:', selector);
+                    return [];
+                }
+                return originalQuerySelectorAll.call(this, selector);
+            } catch (error) {
+                console.warn('querySelectorAll error prevented:', error);
+                return [];
+            }
+        };
         
         console.log('🚀 PayPoint 2080 - نظام الدفع المستقبلي محمل بنجاح!');
         console.log('📧 بيانات الأدمن:');
