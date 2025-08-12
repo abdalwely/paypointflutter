@@ -724,7 +724,7 @@ const futuristicTemplate = `
             <div class="service-card" onclick="openModal('waterModal')">
                 <div class="service-icon water">💧</div>
                 <div class="service-title">دفع فاتورة المياه</div>
-                <div class="service-subtitle">تسديد فواتير الميا����</div>
+                <div class="service-subtitle">تسديد فواتير الميا��</div>
             </div>
             
             <div class="service-card" onclick="openModal('schoolModal')">
@@ -808,7 +808,7 @@ const futuristicTemplate = `
                     <select class="form-select" id="rechargeAmount" required>
                         <option value="">اختر المبلغ</option>
                         <option value="500">500 ريال</option>
-                        <option value="1000">1000 ريال</option>
+                        <option value="1000">1000 ري��ل</option>
                         <option value="2000">2000 ريال</option>
                         <option value="5000">5000 ريال</option>
                     </select>
@@ -878,7 +878,7 @@ const futuristicTemplate = `
                     <input type="text" class="form-input" id="waterAccount" placeholder="رقم حساب المياه" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">ال��بلغ</label>
+                    <label class="form-label">المبلغ</label>
                     <input type="number" class="form-input" id="waterAmount" placeholder="المبلغ بالريال" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
@@ -901,7 +901,7 @@ const futuristicTemplate = `
                     <label class="form-label">المدرسة</label>
                     <select class="form-select" id="schoolName" required>
                         <option value="">اختر المدرسة</option>
-                        <option value="school1">مدرسة ال��مل</option>
+                        <option value="school1">مدرسة الأمل</option>
                         <option value="school2">مدرسة النهضة</option>
                         <option value="school3">مدرسة المستقبل</option>
                     </select>
@@ -911,7 +911,7 @@ const futuristicTemplate = `
                     <input type="number" class="form-input" id="schoolAmount" placeholder="المبلغ بالريال" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-                    دفع الرسوم
+                    دف�� الرسوم
                 </button>
             </form>
         </div>
@@ -1066,7 +1066,7 @@ const futuristicTemplate = `
                 updateBalance(currentBalance - amount);
                 
                 const transaction = {
-                    type: 'شحن كرت شبك��',
+                    type: 'شحن كرت شبكة',
                     amount: amount,
                     timestamp: new Date().toLocaleString('ar-SA')
                 };
@@ -1175,7 +1175,7 @@ const futuristicTemplate = `
                 
                 showSuccess(\`
                     <div class="success-message">
-                        تم دفع فاتورة المياه بنجاح<br>
+                        تم دفع فاتورة ا��مياه بنجاح<br>
                         رقم الحساب: \${account}<br>
                         المبلغ: \${amount} ريال<br>
                         رقم العملية: WAT\${Date.now()}
@@ -1248,12 +1248,31 @@ const futuristicTemplate = `
             }
         });
 
-        // Prevent default behavior for empty anchors
+        // Prevent default behavior for empty anchors and handle scroll events
         document.addEventListener('click', function(event) {
-            if (event.target.tagName === 'A' && (event.target.getAttribute('href') === '#' || event.target.getAttribute('href') === '')) {
+            try {
+                if (event.target && event.target.tagName === 'A') {
+                    const href = event.target.getAttribute('href');
+                    if (href === '#' || href === '' || href === null) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }
+                }
+            } catch (error) {
+                console.warn('Error handling anchor click:', error);
                 event.preventDefault();
             }
         });
+
+        // Handle scroll events safely
+        document.addEventListener('scroll', function(event) {
+            try {
+                // Safe scroll handling here if needed
+            } catch (error) {
+                console.warn('Scroll error prevented:', error);
+            }
+        }, { passive: true });
 
         // Add comprehensive error handling for any unhandled JavaScript errors
         window.addEventListener('error', function(event) {
@@ -1430,7 +1449,7 @@ app.listen(port, () => {
     console.log('  ✅ دفع فواتير الكهرباء');
     console.log('  ✅ دفع فواتير المياه');
     console.log('  ✅ دفع الرسوم المدرسية');
-    console.log('  ✅ لوحة التحكم الإدارية');
+    console.log('  ✅ لوحة التحكم الإد��رية');
     console.log('  ✅ إحصائيا�� في الوقت الفعلي');
 });
 
