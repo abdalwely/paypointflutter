@@ -1,89 +1,168 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/data/mock_data.dart';
+import '../core/config/app_config.dart';
 import '../models/user_model.dart';
 import '../models/transaction_model.dart';
 
-/// Provider for mock user data when API is not available
-final mockUserProvider = Provider<UserModel>((ref) => MockData.mockUser);
+/// Provider لحالة المستخدم الحالي (بدون بيانات وهمية)
+final currentUserStateProvider = StateProvider<UserModel?>((ref) => null);
 
-/// Provider for mock admin user data
-final mockAdminUserProvider = Provider<UserModel>((ref) => MockData.mockAdminUser);
-
-/// Provider for mock transactions
-final mockTransactionsProvider = Provider<List<TransactionModel>>((ref) => MockData.mockTransactions);
-
-/// Provider for recent mock transactions (last 3)
-final mockRecentTransactionsProvider = Provider<List<TransactionModel>>((ref) => MockData.recentTransactions);
-
-/// Provider for mock statistics
-final mockStatisticsProvider = Provider<Map<String, dynamic>>((ref) => MockData.mockStatistics);
-
-/// Provider for mock notifications
-final mockNotificationsProvider = Provider<List<Map<String, dynamic>>>((ref) => MockData.mockNotifications);
-
-/// Provider for mock network cards
-final mockNetworkCardsProvider = Provider<List<Map<String, dynamic>>>((ref) => MockData.mockNetworkCards);
-
-/// Provider for mock schools
-final mockSchoolsProvider = Provider<List<Map<String, dynamic>>>((ref) => MockData.mockSchools);
-
-/// Provider to check if app should use mock data (when API fails)
-final useMockDataProvider = StateProvider<bool>((ref) => false);
-
-/// Enhanced auth state provider that falls back to mock data
+/// Provider للمستخدم المسجل دخوله حالياً
 final enhancedCurrentUserProvider = Provider<UserModel?>((ref) {
-  final useMockData = ref.watch(useMockDataProvider);
+  final currentUser = ref.watch(currentUserStateProvider);
   
-  if (useMockData) {
-    return MockData.mockUser;
+  // إذا كان هناك مستخدم مسجل دخوله، استخدمه
+  if (currentUser != null) {
+    return currentUser;
   }
   
-  // Try to get real user data, fallback to mock on error
-  try {
-    // This would normally watch the real auth provider
-    // For now, return mock data until API is connected
-    return MockData.mockUser;
-  } catch (e) {
-    // Enable mock data mode on error
-    Future.microtask(() => ref.read(useMockDataProvider.notifier).state = true);
-    return MockData.mockUser;
-  }
+  // إذا لم يكن هناك مست��دم، إرجاع null (لن يظهر بيانات وهمية)
+  return null;
 });
 
-/// Enhanced transactions provider with mock fallback
-final enhancedTransactionsProvider = Provider<List<TransactionModel>>((ref) {
-  final useMockData = ref.watch(useMockDataProvider);
-  
-  if (useMockData) {
-    return MockData.mockTransactions;
-  }
-  
-  // Try to get real transaction data, fallback to mock on error
-  try {
-    // This would normally watch the real transactions provider
-    // For now, return mock data until API is connected
-    return MockData.mockTransactions;
-  } catch (e) {
-    // Enable mock data mode on error
-    Future.microtask(() => ref.read(useMockDataProvider.notifier).state = true);
-    return MockData.mockTransactions;
-  }
-});
-
-/// Provider for balance with mock fallback
+/// Provider للرصيد الحالي
 final enhancedBalanceProvider = Provider<double>((ref) {
   final user = ref.watch(enhancedCurrentUserProvider);
-  return user?.balance ?? 1250.0;
+  return user?.balance ?? 0.0;
 });
 
-/// Provider for user name with mock fallback  
+/// Provider لاسم المستخدم الحالي
 final enhancedUserNameProvider = Provider<String>((ref) {
   final user = ref.watch(enhancedCurrentUserProvider);
-  return user?.name ?? 'أحمد محمد علي';
+  return user?.name ?? 'مستخدم';
 });
 
-/// Provider for admin status with mock fallback
+/// Provider لحالة الأدمن
 final enhancedIsAdminProvider = Provider<bool>((ref) {
   final user = ref.watch(enhancedCurrentUserProvider);
   return user?.isAdmin ?? false;
 });
+
+/// Provider للمعاملات الخاصة بالمستخدم الحالي
+final userTransactionsProvider = StateProvider<List<TransactionModel>>((ref) => []);
+
+/// Provider للمعاملات الأخيرة
+final enhancedTransactionsProvider = Provider<List<TransactionModel>>((ref) {
+  final transactions = ref.watch(userTransactionsProvider);
+  return transactions;
+});
+
+/// Provider للمعاملات الأخيرة (آخر 3 معاملات)
+final recentTransactionsProvider = Provider<List<TransactionModel>>((ref) {
+  final transactions = ref.watch(userTransactionsProvider);
+  return transactions.take(3).toList();
+});
+
+/// Provider ��حفظ المستخدم في حالة تسجيل الدخول
+class UserSession {
+  static void login(WidgetRef ref, {
+    required String email,
+    required String name,
+    bool isAdmin = false,
+    double balance = 0.0,
+  }) {
+    final user = UserModel(
+      uid: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      email: email,
+      phone: isAdmin ? AppConfig.defaultAdminPhone : '+967700000000',
+      isAdmin: isAdmin,
+      balance: balance,
+      createdAt: DateTime.now(),
+      lastLoginAt: DateTime.now(),
+    );
+    
+    ref.read(currentUserStateProvider.notifier).state = user;
+    
+    // إذا كان أدمن، إضافة بعض المعاملات التجريبية
+    if (isAdmin) {
+      ref.read(userTransactionsProvider.notifier).state = _generateSampleTransactions();
+    }
+  }
+  
+  static void logout(WidgetRef ref) {
+    ref.read(currentUserStateProvider.notifier).state = null;
+    ref.read(userTransactionsProvider.notifier).state = [];
+  }
+  
+  static void updateBalance(WidgetRef ref, double newBalance) {
+    final currentUser = ref.read(currentUserStateProvider);
+    if (currentUser != null) {
+      final updatedUser = UserModel(
+        uid: currentUser.uid,
+        name: currentUser.name,
+        email: currentUser.email,
+        phone: currentUser.phone,
+        isAdmin: currentUser.isAdmin,
+        balance: newBalance,
+        createdAt: currentUser.createdAt,
+        lastLoginAt: DateTime.now(),
+      );
+      ref.read(currentUserStateProvider.notifier).state = updatedUser;
+    }
+  }
+  
+  static void addTransaction(WidgetRef ref, TransactionModel transaction) {
+    final currentTransactions = ref.read(userTransactionsProvider);
+    ref.read(userTransactionsProvider.notifier).state = [transaction, ...currentTransactions];
+  }
+}
+
+/// إنشاء معاملات تجريبية للأدمن
+List<TransactionModel> _generateSampleTransactions() {
+  return [
+    TransactionModel(
+      id: 'T001',
+      userId: 'admin',
+      type: TransactionType.networkRecharge,
+      amount: 1000.0,
+      status: TransactionStatus.completed,
+      description: 'شحن كرت يمن موبايل - 1000 ريال',
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+      metadata: {
+        'network': 'yemenmobile',
+        'customerNumber': '777123456',
+        'cardValue': 1000,
+      },
+    ),
+    TransactionModel(
+      id: 'T002',
+      userId: 'admin',
+      type: TransactionType.electricityPayment,
+      amount: 5000.0,
+      status: TransactionStatus.completed,
+      description: 'دفع فاتورة كهرباء',
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      metadata: {
+        'billNumber': 'ELE123456',
+        'customerName': 'أحمد محمد',
+      },
+    ),
+    TransactionModel(
+      id: 'T003',
+      userId: 'admin',
+      type: TransactionType.waterPayment,
+      amount: 2500.0,
+      status: TransactionStatus.completed,
+      description: 'دفع فاتورة مياه',
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      metadata: {
+        'billNumber': 'WAT789012',
+        'customerName': 'فاطمة أحمد',
+      },
+    ),
+  ];
+}
+
+/// مزودي البيانات التجريبية (للحالات الطارئة فقط)
+final mockUserProvider = Provider<UserModel>((ref) => MockData.mockUser);
+final mockAdminUserProvider = Provider<UserModel>((ref) => MockData.mockAdminUser);
+final mockTransactionsProvider = Provider<List<TransactionModel>>((ref) => MockData.mockTransactions);
+final mockRecentTransactionsProvider = Provider<List<TransactionModel>>((ref) => MockData.recentTransactions);
+final mockStatisticsProvider = Provider<Map<String, dynamic>>((ref) => MockData.mockStatistics);
+final mockNotificationsProvider = Provider<List<Map<String, dynamic>>>((ref) => MockData.mockNotifications);
+final mockNetworkCardsProvider = Provider<List<Map<String, dynamic>>>((ref) => MockData.mockNetworkCards);
+final mockSchoolsProvider = Provider<List<Map<String, dynamic>>>((ref) => MockData.mockSchools);
+
+/// Provider للتحكم في استخدام البيانات التجريبية
+final useMockDataProvider = StateProvider<bool>((ref) => false);
