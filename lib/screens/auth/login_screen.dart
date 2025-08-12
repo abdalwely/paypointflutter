@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/config/app_config.dart';
 import '../../providers/auth_provider.dart';
 import '../home/enhanced_dashboard_screen.dart';
 import 'register_screen.dart';
@@ -35,33 +36,72 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Try real authentication first
-      await ref.read(authControllerProvider.notifier).signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+      // التحقق من بيانات الأدمن المحددة مسبقاً
+      if (email == AppConfig.defaultAdminEmail && password == AppConfig.defaultAdminPassword) {
+        // تسجيل دخول الأدمن بنجاح
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('مرحباً بك أيها المسؤول! تم تسجيل الدخول بنجاح'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+        }
+        return;
       }
-    } catch (e) {
-      // If authentication fails, proceed with mock data for demo
-      print('⚠️ Auth failed, proceeding with mock data: $e');
 
-      // Simulate login success with mock data
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (mounted) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تسجيل الدخول بنجاح (البيانات التجريبية)'),
-            backgroundColor: Colors.green,
-          ),
+      // محاولة تسجيل الدخول عبر Firebase
+      try {
+        await ref.read(authControllerProvider.notifier).signIn(
+          email: email,
+          password: password,
         );
 
-        // Navigate to dashboard with mock data
-        Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+        }
+      } catch (e) {
+        // إذا فشل Firebase، تسجيل دخول بأي بيانات صحيحة (للتطوير)
+        if (email.contains('@') && password.length >= 6) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم تسجيل الدخول بنجاح (وضع التطوير)'),
+                backgroundColor: Colors.blue,
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+          }
+        } else {
+          // عرض رسالة خطأ
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('خطأ في تسجيل الدخول: تحقق من البيانات المدخلة'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('حدث خطأ غير متوقع: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -272,6 +312,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     fontFamily: 'Cairo',
                                   ),
                                 ),
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        // Demo Instructions
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue[200]!),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: Colors.blue[600], size: 16),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'بيانات تجريبية:',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[800],
+                                      fontFamily: 'Cairo',
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'للأدمن: ${AppConfig.defaultAdminEmail}',
+                                style: TextStyle(
+                                  color: Colors.blue[700],
+                                  fontFamily: 'Cairo',
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                'أو أي إيميل صحيح مع كلمة مرور 6 أحرف على الأقل',
+                                style: TextStyle(
+                                  color: Colors.blue[700],
+                                  fontFamily: 'Cairo',
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
