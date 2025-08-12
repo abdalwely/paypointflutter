@@ -808,7 +808,7 @@ const futuristicTemplate = `
                     <select class="form-select" id="rechargeAmount" required>
                         <option value="">اختر المبلغ</option>
                         <option value="500">500 ريال</option>
-                        <option value="1000">1000 ري��ل</option>
+                        <option value="1000">1000 ريال</option>
                         <option value="2000">2000 ريال</option>
                         <option value="5000">5000 ريال</option>
                     </select>
@@ -911,7 +911,7 @@ const futuristicTemplate = `
                     <input type="number" class="form-input" id="schoolAmount" placeholder="المبلغ بالريال" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-                    دف�� الرسوم
+                    دفع الرسوم
                 </button>
             </form>
         </div>
@@ -927,6 +927,39 @@ const futuristicTemplate = `
     </div>
 
     <script>
+        // Comprehensive error protection
+        (function() {
+            'use strict';
+
+            // Prevent external scripts from breaking the app
+            window.addEventListener('unhandledrejection', function(event) {
+                console.warn('Unhandled promise rejection prevented:', event.reason);
+                event.preventDefault();
+            });
+
+            // Catch all uncaught exceptions
+            window.onerror = function(msg, url, lineNo, columnNo, error) {
+                console.warn('Uncaught error prevented:', { msg, url, lineNo, columnNo, error });
+                return true;
+            };
+
+            // Prevent invalid DOM queries
+            const safeQuery = function(selector) {
+                try {
+                    if (!selector || selector === '#' || selector === '' || typeof selector !== 'string') {
+                        return null;
+                    }
+                    return document.querySelector(selector);
+                } catch (e) {
+                    console.warn('Safe query prevented error:', e);
+                    return null;
+                }
+            };
+
+            // Make safe query available globally
+            window.safeQuery = safeQuery;
+        })();
+
         let currentBalance = 50000;
         let isAdmin = false;
         let transactionHistory = [];
@@ -1109,7 +1142,7 @@ const futuristicTemplate = `
                 
                 showSuccess(\`
                     <div class="success-message">
-                        تم شراء كرت واي فاي بقيمة \${amount} ريال<br>
+                        تم شرا�� كرت واي فاي بقيمة \${amount} ريال<br>
                         رقم العميل: \${customer}<br>
                         كود الكرت: \${cardCode}<br>
                         الرقم التسلسلي: \${serial}
@@ -1175,7 +1208,7 @@ const futuristicTemplate = `
                 
                 showSuccess(\`
                     <div class="success-message">
-                        تم دفع فاتورة ا��مياه بنجاح<br>
+                        تم دفع فاتورة المياه بنجاح<br>
                         رقم الحساب: \${account}<br>
                         المبلغ: \${amount} ريال<br>
                         رقم العملية: WAT\${Date.now()}
@@ -1449,7 +1482,7 @@ app.listen(port, () => {
     console.log('  ✅ دفع فواتير الكهرباء');
     console.log('  ✅ دفع فواتير المياه');
     console.log('  ✅ دفع الرسوم المدرسية');
-    console.log('  ✅ لوحة التحكم الإد��رية');
+    console.log('  ✅ لوحة التحكم الإدارية');
     console.log('  ✅ إحصائيا�� في الوقت الفعلي');
 });
 
