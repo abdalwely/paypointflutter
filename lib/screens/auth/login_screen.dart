@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/config/app_config.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/mock_data_provider.dart';
 import '../home/enhanced_dashboard_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
