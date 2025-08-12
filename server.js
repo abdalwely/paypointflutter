@@ -693,7 +693,7 @@ const futuristicTemplate = `
             <div class="balance-amount" id="balanceAmount">50,000.00 ريال</div>
             <div class="balance-actions">
                 <button class="btn btn-primary" onclick="openModal('topupModal')">
-                    ➕ شحن المحفظة
+                    ➕ شحن ��لمحفظة
                 </button>
                 <button class="btn btn-secondary" onclick="openModal('transferModal')">
                     📤 تحويل
@@ -788,7 +788,7 @@ const futuristicTemplate = `
     <div class="modal" id="networkModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('networkModal')">×</button>
-            <div class="modal-title">شحن كروت الشب��ة</div>
+            <div class="modal-title">شحن كروت الشبكة</div>
             <form onsubmit="processNetworkRecharge(event)">
                 <div class="form-group">
                     <label class="form-label">الشبكة</label>
@@ -991,13 +991,27 @@ const futuristicTemplate = `
             });
         }
         
-        // Modal functions
+        // Modal functions with error handling
         function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
+            try {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+            } catch (error) {
+                console.warn('Error opening modal:', error);
+            }
         }
-        
+
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            try {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            } catch (error) {
+                console.warn('Error closing modal:', error);
+            }
         }
         
         // Update balance
