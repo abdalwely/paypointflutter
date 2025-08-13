@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
-import '../core/constants/app_constants.dart';
+import '../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../core/utils/logger.dart';
+import '../widgets/animated_widgets.dart';
 import 'auth/login_screen.dart';
 import 'home/enhanced_dashboard_screen.dart';
+import 'home/futuristic_dashboard_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
-  static const String routeName = '/splash';
-  
+  static const String routeName = '/';
+
   const SplashScreen({super.key});
 
   @override
@@ -17,209 +19,228 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _scaleController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+  late AnimationController _logoController;
+  late AnimationController _textController;
+  late Animation<double> _logoAnimation;
+  late Animation<double> _textAnimation;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _checkAuthStatus();
+    AppLogger.logScreenEntry('SplashScreen');
+    _setupAnimations();
+    _initializeApp();
   }
 
-  void _initializeAnimations() {
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    
-    _scaleController = AnimationController(
+  void _setupAnimations() {
+    _logoController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
+    
+    _textController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _logoAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
+    _textAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeOut),
+    );
 
-    _fadeController.forward();
-    _scaleController.forward();
+    // Start animations
+    _logoController.forward();
+    Future.delayed(const Duration(milliseconds: 600), () {
+      _textController.forward();
+    });
   }
 
-  void _checkAuthStatus() async {
-    // Wait for splash duration
-    await Future.delayed(AppConstants.splashDuration);
-
+  void _initializeApp() async {
+    // Wait for minimum splash time
+    await Future.delayed(const Duration(seconds: 3));
+    
     if (!mounted) return;
-
-    try {
-      // Try to check authentication state, fallback to mock
-      final authState = ref.read(authStateProvider);
-
-      authState.when(
-        data: (user) {
-          if (user != null) {
-            _navigateToHome();
-          } else {
-            _navigateToLogin();
+    
+    // Check authentication state
+    final authState = ref.read(authProvider);
+    
+    authState.when(
+      data: (user) {
+        if (user != null) {
+          AppLogger.logAuthEvent('User authenticated', userId: user.uid, details: 'Navigating to dashboard');
+          AppLogger.logScreenExit('SplashScreen');
+          Navigator.of(context).pushReplacementNamed(
+            FuturisticDashboardScreen.routeName,
+          );
+        } else {
+          AppLogger.logAuthEvent('User not authenticated', details: 'Navigating to login');
+          AppLogger.logScreenExit('SplashScreen');
+          Navigator.of(context).pushReplacementNamed(
+            LoginScreen.routeName,
+          );
+        }
+      },
+      loading: () {
+        // Still loading, wait a bit more
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed(
+              LoginScreen.routeName,
+            );
           }
-        },
-        loading: () {
-          // Wait a bit more if still loading, then navigate to login
-          Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) _navigateToLogin();
-          });
-        },
-        error: (_, __) {
-          // On error, navigate to home with mock data
-          print('⚠️ Auth error, using mock data');
-          _navigateToHome();
-        },
-      );
-    } catch (e) {
-      // If auth completely fails, go directly to home with mock data
-      print('⚠️ Auth service unavailable, using mock data: $e');
-      _navigateToHome();
-    }
-  }
-
-  void _navigateToHome() {
-    Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
-  }
-
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+        });
+      },
+      error: (error, stack) {
+        Navigator.of(context).pushReplacementNamed(
+          LoginScreen.routeName,
+        );
+      },
+    );
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _scaleController.dispose();
+    _logoController.dispose();
+    _textController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.primaryColor,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              AppConstants.primaryColor,
-              AppConstants.secondaryColor,
+              AppTheme.primaryColor,
+              AppTheme.secondaryColor,
             ],
           ),
         ),
-        child: Center(
+        child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Logo with Animation
-              AnimatedBuilder(
-                animation: _scaleAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _scaleAnimation.value,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated Logo
+                      AnimatedBuilder(
+                        animation: _logoAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _logoAnimation.value,
+                            child: Container(
+                              width: 150,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(40),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 15),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.payment,
+                                size: 80,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      child: const Icon(
-                        Icons.payment,
-                        size: 60,
-                        color: AppConstants.primaryColor,
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Animated Text
+                      AnimatedBuilder(
+                        animation: _textAnimation,
+                        builder: (context, child) {
+                          return Opacity(
+                            opacity: _textAnimation.value,
+                            child: Transform.translate(
+                              offset: Offset(0, 20 * (1 - _textAnimation.value)),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'PayPoint',
+                                    style: TextStyle(
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontFamily: 'Cairo',
+                                      letterSpacing: 3,
+                                    ),
+                                  ),
+                                  
+                                  const SizedBox(height: 12),
+                                  
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'منصة الدفع الإلكتروني الشاملة',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontFamily: 'Cairo',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Loading Indicator
+              Container(
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  children: [
+                    const PulseWidget(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 3,
                       ),
                     ),
-                  );
-                },
-              ),
-              
-              const SizedBox(height: 30),
-              
-              // App Name with Fade Animation
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  AppConstants.appName,
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'Cairo',
-                    letterSpacing: 2,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 10),
-              
-              // App Subtitle
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  'منصة الدفع الإلكتروني',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 50),
-              
-              // Loading Animation
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    strokeWidth: 3,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Loading Text
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  'جاري التحميل...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontFamily: 'Cairo',
-                  ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    Text(
+                      'جارٍ تحضير التطبيق...',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 16,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

@@ -10,20 +10,22 @@ import 'firebase_options.dart';
 import 'services/admin_service.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/logger.dart';
+import 'core/testing/operation_tester.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Start app logging
+  AppLogger.logAppStart();
+
   try {
-    // تجاهل Firebase في حالة عدم التوفر واستخدام البيانات الوهمية
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      print('✅ Firebase initialized successfully');
-    } catch (e) {
-      print('⚠️ Firebase not available, using mock data: $e');
-    }
+    // Initialize Firebase
+    AppLogger.info('Firebase', 'Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    AppLogger.success('Firebase', 'Firebase initialized successfully');
     
     // Set preferred orientations
     await SystemChrome.setPreferredOrientations([
@@ -44,36 +46,55 @@ Future<void> main() async {
     );
     
     // Initialize SharedPreferences
+    AppLogger.info('Storage', 'Initializing SharedPreferences...');
     final prefs = await SharedPreferences.getInstance();
-    print('✅ SharedPreferences initialized');
-    
-    // تجاهل Admin Service في حالة عدم توفر Firebase
+    AppLogger.success('Storage', 'SharedPreferences initialized successfully');
+
+    // Initialize Admin Service and create default admin
     try {
+      AppLogger.info('Admin', 'Initializing admin service...');
       final adminService = AdminService();
       await adminService.createDefaultAdmin();
+      AppLogger.success('Admin', 'Admin service initialized successfully');
     } catch (e) {
-      print('⚠️ Admin service not available, using mock admin: $e');
+      AppLogger.warning('Admin', 'Admin service initialization failed: $e');
     }
-    
+
     // Set app configuration
+    AppLogger.info('Config', 'Setting app configuration...');
     await _setAppConfiguration();
-    
-    print('🚀 Starting PayPoint App with Mock Data...');
-    
+
+    // Setup error handling
+    AppLogger.info('ErrorHandling', 'Setting up error handling...');
+    setupErrorHandling();
+
+    // Mark app start for performance monitoring
+    PerformanceMonitor.markAppStart();
+
+    AppLogger.separator(title: 'APP READY');
+    AppLogger.success('App', 'PayPoint App is starting...');
+
+    // Run comprehensive system test in debug mode
+    if (kDebugMode) {
+      AppLogger.info('Testing', 'Running system tests...');
+      OperationTester.testFeatures();
+      OperationTester.testPerformance();
+    }
+
     runApp(
       const ProviderScope(
         child: PayPointApp(),
       ),
     );
   } catch (e) {
-    print('❌ Error during app initialization: $e');
+    AppLogger.error('App', 'Critical error during app initialization', error: e);
     
-    // Run app with mock data and error handling
+    // Run app with fallback configuration
     runApp(
       MaterialApp(
-        title: 'PayPoint - تطبيق الدفع الإلكتروني',
+        title: 'PayPoint - خطأ في التهيئة',
         theme: AppTheme.lightTheme,
-        home: MockDataErrorScreen(error: e.toString()),
+        home: ErrorScreen(error: e.toString()),
       ),
     );
   }
@@ -93,22 +114,22 @@ Future<void> _setAppConfiguration() async {
       DeviceOrientation.portraitDown,
     ]);
     
-    print('✅ App configuration set');
+    AppLogger.success('Config', 'App configuration set successfully');
   } catch (e) {
-    print('⚠️ Warning: Could not set app configuration: $e');
+    AppLogger.warning('Config', 'Could not set app configuration: $e');
   }
 }
 
-// شاشة خطأ مع البيانات الوهمية
-class MockDataErrorScreen extends StatelessWidget {
+// Error Screen for critical initialization failures
+class ErrorScreen extends StatelessWidget {
   final String error;
   
-  const MockDataErrorScreen({super.key, required this.error});
+  const ErrorScreen({super.key, required this.error});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: AppTheme.errorColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -131,9 +152,9 @@ class MockDataErrorScreen extends StatelessWidget {
                     ],
                   ),
                   child: const Icon(
-                    Icons.payment,
+                    Icons.error_outline,
                     size: 60,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.errorColor,
                   ),
                 ),
                 
@@ -169,20 +190,20 @@ class MockDataErrorScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
-                    backdropFilter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                //    backdropFilter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   ),
                   child: Column(
                     children: [
                       const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 64,
+                        Icons.warning,
+                        color: Colors.amber,
+                        size: 48,
                       ),
                       
                       const SizedBox(height: 16),
                       
                       const Text(
-                        'التطبيق يعمل بالبيانات الوهمية!',
+                        'خطأ في تشغيل التطبيق',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -195,166 +216,111 @@ class MockDataErrorScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       
                       const Text(
-                        'سيتم عرض واجهات جميلة مع بيانات تجريبية\nحتى يتم ربط الـ API الحقيقي',
+                        'حدث خطأ أثناء تهيئة التطبيق. يرجى التأكد من اتصال الإنترنت وإعادة المحاولة.',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           color: Colors.white70,
                           fontFamily: 'Cairo',
                         ),
                         textAlign: TextAlign.center,
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => const ProviderScope(
-                                child: PayPointApp(),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'تفاصيل الخطأ:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'Cairo',
                               ),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppTheme.primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                            const SizedBox(height: 4),
+                            Text(
+                              error,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white70,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
                         ),
-                        child: const Text(
-                          'دخول التطبيق',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Cairo',
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                // Restart the app
+                                SystemNavigator.pop();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppTheme.errorColor,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'إعادة التشغيل',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                // Try to continue with fallback mode
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const ProviderScope(
+                                      child: PayPointApp(),
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'المحاولة',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Error Screen for initialization failures
-class ErrorScreen extends StatelessWidget {
-  final String error;
-  
-  const ErrorScreen({super.key, required this.error});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.errorColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.white,
-                  size: 80,
-                ),
-                
-                const SizedBox(height: 24),
-                
-                const Text(
-                  'خطأ في تشغيل التطبيق',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'Cairo',
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                const SizedBox(height: 16),
-                
-                const Text(
-                  'عذراً، حدث خطأ أثناء تشغيل التطبيق. يرجى إعادة تشغيل التطبيق.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontFamily: 'Cairo',
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                const SizedBox(height: 32),
-                
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'تفاصيل الخطأ:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        error,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 32),
-                
-                ElevatedButton(
-                  onPressed: () {
-                    // Restart the app
-                    SystemNavigator.pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppTheme.errorColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'إعادة التشغيل',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
                   ),
                 ),
               ],
@@ -378,7 +344,10 @@ class AppInfo {
     print('🔢 Version: $version');
     print('🏗️ Build: $buildNumber');
     print('📝 Description: $description');
-    print('🎯 Mode: Mock Data (Development)');
+    print('🎯 Mode: Production Ready');
+    print('🔥 Firebase: Enabled');
+    print('🔒 Auth: Enabled');
+    print('📊 Firestore: Enabled');
   }
   
   static Map<String, dynamic> getAppInfo() {
@@ -388,7 +357,9 @@ class AppInfo {
       'buildNumber': buildNumber,
       'description': description,
       'isDebug': kDebugMode,
-      'mockDataMode': true,
+      'firebaseEnabled': true,
+      'authEnabled': true,
+      'firestoreEnabled': true,
     };
   }
 }
@@ -400,13 +371,12 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void setupErrorHandling() {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    print('Flutter Error: ${details.exception}');
-    print('Stack Trace: ${details.stack}');
+    AppLogger.logUnhandledException(details.exception, details.stack ?? StackTrace.current,
+                                   context: 'Flutter Framework');
   };
-  
+
   ui.PlatformDispatcher.instance.onError = (error, stack) {
-    print('Platform Error: $error');
-    print('Stack Trace: $stack');
+    AppLogger.logUnhandledException(error, stack, context: 'Platform');
     return true;
   };
 }
@@ -419,22 +389,22 @@ class PerformanceMonitor {
   
   static void markAppStart() {
     _appStartTime = DateTime.now();
-    print('⏱️ App start time marked');
+    AppLogger.logPerformance('App Start', Duration.zero, additionalInfo: 'Marked start time');
   }
-  
+
   static void markSplashEnd() {
     _splashEndTime = DateTime.now();
     if (_appStartTime != null) {
       final duration = _splashEndTime!.difference(_appStartTime!);
-      print('⏱️ Splash duration: ${duration.inMilliseconds}ms');
+      AppLogger.logPerformance('Splash Screen', duration);
     }
   }
-  
+
   static void markFirstFrame() {
     _firstFrameTime = DateTime.now();
     if (_appStartTime != null) {
       final duration = _firstFrameTime!.difference(_appStartTime!);
-      print('⏱️ Time to first frame: ${duration.inMilliseconds}ms');
+      AppLogger.logPerformance('First Frame', duration);
     }
   }
   

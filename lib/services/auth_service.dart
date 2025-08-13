@@ -1,180 +1,310 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
-import '../core/constants/app_constants.dart';
+import '../core/config/app_config.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Get current user stream
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
-  
-  // Get current user
+  // الحصول على المستخدم الحالي
   User? get currentUser => _auth.currentUser;
 
-  // Register with email and password
-  Future<UserModel?> registerWithEmailAndPassword({
-    required String email,
-    required String password,
-    required String name,
-    required String phone,
-  }) async {
+  // Stream للمصادقة
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // تسجيل الدخول بالبريد الإلكتروني وكلمة المرور
+  Future<UserCredential> signInWithEmailAndPassword(
+    String email, 
+    String password,
+  ) async {
     try {
-      // Create user with Firebase Auth
-      final UserCredential result = await _auth.createUserWithEmailAndPassword(
+      final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      User? user = result.user;
-      if (user != null) {
-        // Create user document in Firestore
-        final UserModel userModel = UserModel(
-          uid: user.uid,
-          name: name,
-          email: email,
-          phone: phone,
-          createdAt: DateTime.now(),
-          lastLoginAt: DateTime.now(),
-        );
-
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(user.uid)
-            .set(userModel.toFirestore());
-
-        // Update display name
-        await user.updateDisplayName(name);
-
-        return userModel;
+      
+      // تحديث آخر دخول
+      if (credential.user != null) {
+        await _updateLastLogin(credential.user!.uid);
       }
-      return null;
-    } catch (e) {
+      
+      return credential;
+    } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('حدث خطأ غير متوقع: ${e.toString()}');
     }
   }
 
-  // Sign in with email and password
-  Future<UserModel?> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
+  // إنشاء حساب جديد
+  Future<UserCredential> createUserWithEmailAndPassword(
+    String email, 
+    String password,
+  ) async {
     try {
-      final UserCredential result = await _auth.signInWithEmailAndPassword(
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      User? user = result.user;
-      if (user != null) {
-        // Update last login time
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(user.uid)
-            .update({
-          'lastLoginAt': Timestamp.fromDate(DateTime.now()),
-        });
-
-        // Get user data from Firestore
-        return await getUserData(user.uid);
-      }
-      return null;
-    } catch (e) {
+      
+      return credential;
+    } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('حدث خطأ غير متوقع: ${e.toString()}');
     }
   }
 
-  // Reset password
-  Future<void> resetPassword(String email) async {
+  // إرسال رسالة إعادة تعيين كلمة المرور
+  Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('حدث خطأ في إرسال البريد الإلكتروني');
     }
   }
 
-  // Sign out
+  // إرسال رسالة تأكيد الب��يد الإلكتروني
+  Future<void> sendEmailVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } catch (e) {
+      throw Exception('خطأ في إرسال رسالة التأكيد');
+    }
+  }
+
+  // تسجيل الخروج
   Future<void> signOut() async {
     try {
       await _auth.signOut();
     } catch (e) {
-      throw Exception('خطأ في تسجيل الخروج: ${e.toString()}');
+      throw Exception('خطأ في تسجيل الخروج');
     }
   }
 
-  // Get user data from Firestore
-  Future<UserModel?> getUserData(String uid) async {
+  // حذف الحساب
+  Future<void> deleteAccount() async {
     try {
-      final DocumentSnapshot doc = await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(uid)
+      final user = _auth.currentUser;
+      if (user != null) {
+        // حذف بيانات المستخدم من Firestore
+        await _firestore.collection('users').doc(user.uid).delete();
+        
+        // حذف الحساب من Firebase Auth
+        await user.delete();
+      }
+    } catch (e) {
+      throw Exception('خطأ في حذف الحساب');
+    }
+  }
+
+  // تحديث كلمة المرور
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.updatePassword(newPassword);
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('خطأ في تحديث كلمة المرور');
+    }
+  }
+
+  // تحديث البريد الإلكتروني
+  Future<void> updateEmail(String newEmail) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.updateEmail(newEmail);
+        await user.sendEmailVerification();
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('خطأ في تحديث البريد الإلكتروني');
+    }
+  }
+
+  // إعادة المصادقة
+  Future<void> reauthenticateWithPassword(String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && user.email != null) {
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('خطأ في إعادة المصادقة');
+    }
+  }
+
+  // إنشاء مستخدم مدير افتراضي
+  Future<void> createDefaultAdmin() async {
+    try {
+      // التحقق من وجود مدير افتراضي
+      final adminQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: AppConfig.defaultAdminEmail)
+          .where('isAdmin', isEqualTo: true)
           .get();
 
+      if (adminQuery.docs.isEmpty) {
+        // إنشاء حساب المدير
+        final adminCredential = await createUserWithEmailAndPassword(
+          AppConfig.defaultAdminEmail,
+          AppConfig.defaultAdminPassword,
+        );
+
+        if (adminCredential.user != null) {
+          // تحديث الملف الشخصي
+          await adminCredential.user!.updateDisplayName(AppConfig.defaultAdminName);
+
+          // إنشاء سجل المدير في Firestore
+          final adminUser = UserModel(
+            uid: adminCredential.user!.uid,
+            name: AppConfig.defaultAdminName,
+            email: AppConfig.defaultAdminEmail,
+            phone: AppConfig.defaultAdminPhone,
+            balance: 0.0,
+            isAdmin: true,
+            createdAt: DateTime.now(),
+            lastLoginAt: DateTime.now(),
+          );
+
+          await _firestore
+              .collection('users')
+              .doc(adminCredential.user!.uid)
+              .set(adminUser.toFirestore());
+
+          print('✅ تم إنشاء حساب المدير الافتراضي');
+        }
+      } else {
+        print('✅ ح��اب المدير موجود بالفعل');
+      }
+    } catch (e) {
+      print('⚠️ خطأ في إنشاء حساب المدير: $e');
+    }
+  }
+
+  // الحصول على بيانات المستخدم من Firestore
+  Future<UserModel?> getUserData(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
         return UserModel.fromFirestore(doc);
       }
       return null;
     } catch (e) {
-      throw Exception('خطأ في جلب بيانات المستخدم: ${e.toString()}');
+      throw Exception('خطأ في جلب بيانات المستخدم');
     }
   }
 
-  // Update user data
-  Future<void> updateUserData(UserModel user) async {
+  // إنشاء أو تحديث بيانات المستخدم في Firestore
+  Future<void> createOrUpdateUser(UserModel user) async {
     try {
       await _firestore
-          .collection(AppConstants.usersCollection)
+          .collection('users')
           .doc(user.uid)
-          .update(user.toFirestore());
+          .set(user.toFirestore(), SetOptions(merge: true));
     } catch (e) {
-      throw Exception('خطأ في تحديث بيانات المستخدم: ${e.toString()}');
+      throw Exception('خطأ في حفظ بيانات المستخدم');
     }
   }
 
-  // Delete user account
-  Future<void> deleteAccount() async {
+  // تحديث آخر دخول
+  Future<void> _updateLastLogin(String uid) async {
     try {
-      User? user = _auth.currentUser;
-      if (user != null) {
-        // Delete user document from Firestore
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(user.uid)
-            .delete();
-
-        // Delete Firebase Auth account
-        await user.delete();
-      }
+      await _firestore.collection('users').doc(uid).update({
+        'lastLoginAt': Timestamp.fromDate(DateTime.now()),
+      });
     } catch (e) {
-      throw Exception('خطأ في حذف الحساب: ${e.toString()}');
+      // تجاهل الخطأ إذا لم يتم العثور على المستخدم
+      print('تحذير: لم يتم تحديث آخر دخول للمستخدم $uid');
     }
   }
 
-  // Handle authentication exceptions
-  String _handleAuthException(dynamic e) {
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
-        case 'weak-password':
-          return 'كلمة المرور ضعيفة';
-        case 'email-already-in-use':
-          return 'البريد الإلكتروني مستخدم بالفعل';
-        case 'invalid-email':
-          return 'البريد الإلكتروني غير صحيح';
-        case 'user-not-found':
-          return 'المستخدم غير موجود';
-        case 'wrong-password':
-          return 'كلمة المرور خاطئة';
-        case 'user-disabled':
-          return 'تم تعطيل الحساب';
-        case 'too-many-requests':
-          return 'تم تجاوز عدد المحاولات المسموح';
-        case 'operation-not-allowed':
-          return 'العملية غير مسموحة';
-        default:
-          return 'خطأ في المصادقة: ${e.message}';
-      }
+  // معالجة أخطاء Firebase Auth
+  String _handleAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'لا يوجد مستخدم بهذا البريد الإلكتروني';
+      case 'wrong-password':
+        return 'كلمة المرور غير صحيحة';
+      case 'email-already-in-use':
+        return 'هذا البريد الإلكتروني مستخدم بالفعل';
+      case 'weak-password':
+        return 'كلمة المرور ضعيفة جداً';
+      case 'invalid-email':
+        return 'البريد الإلكتروني غير صحيح';
+      case 'user-disabled':
+        return 'تم تعطيل هذا الحساب';
+      case 'too-many-requests':
+        return 'تم تجاوز عدد المحاولات المسموح، حاول لاحقاً';
+      case 'operation-not-allowed':
+        return 'هذه العملية غير مسموحة';
+      case 'invalid-credential':
+        return 'بيانات الدخول غير صحيحة';
+      case 'requires-recent-login':
+        return 'يتطلب تسجيل دخول حديث';
+      case 'credential-already-in-use':
+        return 'هذه البيانات مستخدمة بالفعل';
+      case 'invalid-verification-code':
+        return 'كود التحقق غير صحيح';
+      case 'invalid-verification-id':
+        return 'معرف التحقق غير صحيح';
+      case 'network-request-failed':
+        return 'خطأ في الاتصال بالإنترنت';
+      case 'timeout':
+        return 'انتهت مهلة الطلب';
+      default:
+        return 'حدث خطأ غير متوقع: ${e.message}';
     }
-    return 'خطأ غير متوقع: ${e.toString()}';
   }
+
+  // التحقق من حالة الاتصال
+  Future<bool> checkConnection() async {
+    try {
+      await _auth.fetchSignInMethodsForEmail('test@example.com');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // تسجيل الدخول التلقائي (للتطوير فقط)
+  Future<UserCredential?> signInAnonymously() async {
+    try {
+      return await _auth.signInAnonymously();
+    } catch (e) {
+      throw Exception('خطأ في تسجيل الدخول التلقائي');
+    }
+  }
+
+  // إعادة تحميل بيانات المستخدم
+  Future<void> reloadUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } catch (e) {
+      // تجاهل الخطأ
+    }
+  }
+
+  // التحقق من تأكيد البريد الإلكتروني
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  // التحقق من تسجيل الدخول
+  bool get isSignedIn => _auth.currentUser != null;
 }

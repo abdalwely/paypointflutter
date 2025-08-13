@@ -286,6 +286,8 @@ class ApiService {
       return ApiResponse.error('خطأ في الاتصال بالخدمة');
     }
   }
+
+  rechargeNetwork({required String provider, required int value, required String userId, required String userPhone}) {}
 }
 
 // API Response wrapper

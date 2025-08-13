@@ -1,29 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/animated_widgets.dart';
 import '../home/enhanced_dashboard_screen.dart';
+import '../home/futuristic_dashboard_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   static const String routeName = '/login';
-  
+
   const LoginScreen({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  
+  bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _rememberMe = false;
+
+  late AnimationController _slideController;
+  late AnimationController _fadeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAnimations();
+  }
+
+  void _setupAnimations() {
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOut,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    ));
+
+    // Start animations
+    _fadeController.forward();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _slideController.forward();
+    });
+  }
 
   @override
   void dispose() {
+    _slideController.dispose();
+    _fadeController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -35,110 +87,116 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Try real authentication first
-      await ref.read(authControllerProvider.notifier).signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final success = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithEmail(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+      if (success && mounted) {
+        Navigator.of(context).pushReplacementNamed(
+          FuturisticDashboardScreen.routeName,
+        );
       }
     } catch (e) {
-      // If authentication fails, proceed with mock data for demo
-      print('⚠️ Auth failed, proceeding with mock data: $e');
-
-      // Simulate login success with mock data
-      await Future.delayed(const Duration(seconds: 1));
-
       if (mounted) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تسجيل الدخول بنجاح (البيانات التجريبية)'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // Navigate to dashboard with mock data
-        Navigator.of(context).pushReplacementNamed(EnhancedDashboardScreen.routeName);
+        _showErrorSnackBar(e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.errorColor,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'موافق',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+    
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppConstants.primaryColor,
-              AppConstants.secondaryColor,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                
-                // Logo
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
+      backgroundColor: AppTheme.primaryColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              
+              // App Logo and Title
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.payment,
-                    size: 50,
-                    color: AppConstants.primaryColor,
-                  ),
+                      child: const Icon(
+                        Icons.payment,
+                        size: 60,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    const Text(
+                      'PayPoint',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Cairo',
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    Text(
+                      'تطبيق الدفع الإلكتروني',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white.withOpacity(0.8),
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
                 ),
-                
-                const SizedBox(height: 30),
-                
-                // Welcome Text
-                const Text(
-                  'مرحباً بك',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-                
-                const SizedBox(height: 10),
-                
-                const Text(
-                  'سجل دخولك للمتابعة',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-                
-                const SizedBox(height: 50),
-                
-                // Login Form
-                Container(
+              ),
+              
+              const SizedBox(height: 60),
+              
+              // Login Form
+              SlideTransition(
+                position: _slideAnimation,
+                child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -154,20 +212,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                          'تسجيل الدخول',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        Text(
+                          'أدخل بيانات الدخول للوصول إلى حسابك',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textSecondary,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 32),
+                        
                         // Email Field
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
                             labelText: 'البريد الإلكتروني',
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
+                            hintText: 'أدخل بريدك الإلكتروني',
+                            prefixIcon: Icon(Icons.email_outlined),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -185,27 +263,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // Password Field
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: !_isPasswordVisible,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _handleLogin(),
                           decoration: InputDecoration(
                             labelText: 'كلمة المرور',
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            hintText: 'أدخل كلمة المرور',
+                            prefixIcon: const Icon(Icons.lock_outlined),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _isPasswordVisible
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
+                                  _obscurePassword = !_obscurePassword;
                                 });
                               },
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -218,96 +294,163 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                         ),
                         
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 16),
                         
-                        // Forgot Password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
+                        // Remember Me & Forgot Password
+                        SingleChildScrollView(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                                    activeColor: AppTheme.primaryColor,
+                                  ),
+                                  const Text(
+                                    'تذكرني',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pushNamed(
+                                    ForgotPasswordScreen.routeName,
+                                  );
+                                },
+                                child: const Text(
+                                  'هل نسيت كلمة المرور؟',
+                                  style: TextStyle(
+                                    color: AppTheme.primaryColor,
+                                    fontFamily: 'Cairo',
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Login Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text(
+                                    'تسجيل الدخول',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Divider
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'أو',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Register Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
                             onPressed: () {
                               Navigator.of(context).pushNamed(
-                                ForgotPasswordScreen.routeName,
+                                RegisterScreen.routeName,
                               );
                             },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.primaryColor,
+                              side: const BorderSide(color: AppTheme.primaryColor),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                             child: const Text(
-                              'نسيت كلمة المرور؟',
+                              'إنشاء حساب جديد',
                               style: TextStyle(
-                                color: AppConstants.primaryColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
                               ),
                             ),
                           ),
                         ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Login Button
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConstants.primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Text(
-                                  'تسجيل الدخول',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Cairo',
-                                  ),
-                                ),
-                        ),
                       ],
                     ),
                   ),
                 ),
-                
-                const SizedBox(height: 30),
-                
-                // Register Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'ليس لديك حساب؟ ',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontFamily: 'Cairo',
-                      ),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Quick Admin Login (for development)
+              if (const bool.fromEnvironment('dart.vm.product') == false)
+                TextButton(
+                  onPressed: () async {
+                    _emailController.text = 'admin@paypoint.ye';
+                    _passwordController.text = 'PayPoint@2024!';
+                    _handleLogin();
+                  },
+                  child: Text(
+                    'دخول سريع للمدير (للتطوير)',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontFamily: 'Cairo',
+                      fontSize: 12,
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed(RegisterScreen.routeName);
-                      },
-                      child: const Text(
-                        'إنشاء حساب',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

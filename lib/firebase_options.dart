@@ -17,34 +17,19 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return linux;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -52,11 +37,59 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDHNqU654IKgFaY37CFOlvbksEZgvGyPH4',
+    appId: '1:466405847258:web:17a405fb73da8a8ee175e3',
+    messagingSenderId: '466405847258',
+    projectId: 'aboodfirebase',
+    authDomain: 'aboodfirebase.firebaseapp.com',
+    storageBucket: 'aboodfirebase.firebasestorage.app',
+    measurementId: 'G-MEASUREMENT_ID',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDHNqU654IKgFaY37CFOlvbksEZgvGyPH4',
     appId: '1:466405847258:android:17a405fb73da8a8ee175e3',
     messagingSenderId: '466405847258',
     projectId: 'aboodfirebase',
     storageBucket: 'aboodfirebase.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDHNqU654IKgFaY37CFOlvbksEZgvGyPH4',
+    appId: '1:466405847258:ios:17a405fb73da8a8ee175e3',
+    messagingSenderId: '466405847258',
+    projectId: 'aboodfirebase',
+    storageBucket: 'aboodfirebase.firebasestorage.app',
+    iosBundleId: 'com.paypoint.ye',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDHNqU654IKgFaY37CFOlvbksEZgvGyPH4',
+    appId: '1:466405847258:macos:17a405fb73da8a8ee175e3',
+    messagingSenderId: '466405847258',
+    projectId: 'aboodfirebase',
+    storageBucket: 'aboodfirebase.firebasestorage.app',
+    iosBundleId: 'com.paypoint.ye',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDHNqU654IKgFaY37CFOlvbksEZgvGyPH4',
+    appId: '1:466405847258:windows:17a405fb73da8a8ee175e3',
+    messagingSenderId: '466405847258',
+    projectId: 'aboodfirebase',
+    authDomain: 'aboodfirebase.firebaseapp.com',
+    storageBucket: 'aboodfirebase.firebasestorage.app',
+    measurementId: 'G-MEASUREMENT_ID',
+  );
+
+  static const FirebaseOptions linux = FirebaseOptions(
+    apiKey: 'AIzaSyDHNqU654IKgFaY37CFOlvbksEZgvGyPH4',
+    appId: '1:466405847258:linux:17a405fb73da8a8ee175e3',
+    messagingSenderId: '466405847258',
+    projectId: 'aboodfirebase',
+    authDomain: 'aboodfirebase.firebaseapp.com',
+    storageBucket: 'aboodfirebase.firebasestorage.app',
+    measurementId: 'G-MEASUREMENT_ID',
   );
 }

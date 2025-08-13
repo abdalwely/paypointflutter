@@ -34,7 +34,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserAsync = ref.watch(currentUserAsyncProvider);
 
     return Scaffold(
       appBar: AppBar(

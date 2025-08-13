@@ -11,7 +11,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserAsync = ref.watch(currentUserAsyncProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -144,7 +144,7 @@ class ProfileScreen extends ConsumerWidget {
                       
                       _buildActionCard(
                         icon: Icons.edit_outlined,
-                        title: 'تعديل المعلومات',
+                        title: 'تعديل الم��لومات',
                         subtitle: 'تحديث الاسم والصورة الشخصية',
                         onTap: () {
                           // Navigate to edit profile
@@ -419,7 +419,7 @@ class ProfileScreen extends ConsumerWidget {
           style: TextStyle(fontFamily: 'Cairo'),
         ),
         content: const Text(
-          'هل أنت متأكد من تسجيل الخروج؟',
+          'هل أنت م��أكد من تسجيل الخروج؟',
           style: TextStyle(fontFamily: 'Cairo'),
         ),
         actions: [

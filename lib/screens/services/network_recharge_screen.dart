@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/constants/app_constants.dart';
-import '../../models/transaction_model.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/config/app_config.dart';
+import '../../services/wifi_cards_service.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/firestore_provider.dart';
 import '../transactions/transaction_result_screen.dart';
 
 class NetworkRechargeScreen extends ConsumerStatefulWidget {
@@ -16,85 +16,86 @@ class NetworkRechargeScreen extends ConsumerStatefulWidget {
 }
 
 class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
-  String? selectedNetwork;
+  String? selectedProvider;
   int? selectedValue;
   bool isLoading = false;
+  final WiFiCardsService _wifiCardsService = WiFiCardsService();
 
   void _handlePurchase() async {
-    if (selectedNetwork == null || selectedValue == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يرجى اختيار الشبكة وفئة الكرت'),
-          backgroundColor: AppConstants.errorColor,
-        ),
-      );
+    if (selectedProvider == null || selectedValue == null) {
+      _showErrorSnackBar('يرجى اختيار المزود وفئة الكرت');
       return;
     }
 
-    final currentUser = await ref.read(currentUserProvider.future);
+    final firebaseUser = ref.read(authProvider).value;
+    print('🔍 [NetworkRecharge] Firebase user: ${firebaseUser?.uid}');
+    if (firebaseUser == null) {
+      _showErrorSnackBar('خطأ في بيانات المستخدم');
+      return;
+    }
+
+    final currentUser = ref.read(currentUserProvider);
+    print('🔍 [NetworkRecharge] Current user: ${currentUser?.uid}, Phone: ${currentUser?.phone}');
     if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('خطأ في بيانات المستخدم'),
-          backgroundColor: AppConstants.errorColor,
-        ),
-      );
+      _showErrorSnackBar('خطأ في تحميل بيانات المستخدم');
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      final transaction = TransactionModel(
-        id: '',
+      // تنفيذ عملية الشراء
+      final result = await _wifiCardsService.processPurchase(
+        provider: selectedProvider!,
+        value: selectedValue!,
         userId: currentUser.uid,
-        type: TransactionType.networkRecharge,
-        amount: selectedValue!.toDouble(),
-        details: {
-          'network': selectedNetwork,
-          'value': selectedValue,
-          'networkName': AppConstants.networkTypes
-              .firstWhere((n) => n['id'] == selectedNetwork)['name'],
-        },
-        createdAt: DateTime.now(),
+        userPhone: currentUser.phone ?? '+967777000000',
       );
 
-      final transactionId = await ref
-          .read(transactionControllerProvider.notifier)
-          .createTransaction(transaction);
-
-      if (transactionId != null && mounted) {
-        Navigator.of(context).pushReplacementNamed(
-          TransactionResultScreen.routeName,
-          arguments: {
-            'transactionId': transactionId,
-            'isSuccess': true,
-          },
-        );
+      if (mounted) {
+        if (result['success']) {
+          // الانتقال إلى صفحة النتيجة
+          Navigator.of(context).pushReplacementNamed(
+            TransactionResultScreen.routeName,
+            arguments: {
+              'transactionId': result['transactionId'],
+              'isSuccess': true,
+              'cardCode': result['cardCode'],
+              'cardSerial': result['cardSerial'],
+              'provider': selectedProvider,
+              'value': selectedValue,
+              'message': result['message'],
+            },
+          );
+        } else {
+          _showErrorSnackBar(result['message'] ?? 'حدث خطأ في العملية');
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ في المعاملة: ${e.toString()}'),
-            backgroundColor: AppConstants.errorColor,
-          ),
-        );
+        _showErrorSnackBar('خطأ في المعاملة: ${e.toString()}');
       }
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.errorColor,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'شحن كروت الشبكة',
-          style: TextStyle(fontFamily: 'Cairo'),
-        ),
-        backgroundColor: AppConstants.primaryColor,
+        title: const Text('شحن كروت الشبكة'),
+        backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -103,13 +104,13 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Network Selection
+            // Provider Selection
             const Text(
-              'اختر الشبكة',
+              'اختر المزود',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppConstants.textPrimary,
+                color: AppTheme.textPrimary,
                 fontFamily: 'Cairo',
               ),
             ),
@@ -125,30 +126,35 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.2,
               ),
-              itemCount: AppConstants.networkTypes.length,
+              itemCount: AppConfig.supportedNetworks.length,
               itemBuilder: (context, index) {
-                final network = AppConstants.networkTypes[index];
-                final isSelected = selectedNetwork == network['id'];
+                final network = AppConfig.supportedNetworks[index];
+                final isSelected = selectedProvider == network['id'];
                 
                 return InkWell(
-                  onTap: () {
+                  onTap: network['isActive'] ? () {
                     setState(() {
-                      selectedNetwork = network['id'];
+                      selectedProvider = network['id'];
+                      selectedValue = null; // Reset value when changing provider
                     });
-                  },
+                  } : null,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isSelected ? network['color'].withOpacity(0.1) : Colors.white,
+                      color: isSelected 
+                          ? Color(network['color']).withOpacity(0.1) 
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? network['color'] : Colors.grey[300]!,
+                        color: isSelected 
+                            ? Color(network['color']) 
+                            : Colors.grey[300]!,
                         width: isSelected ? 2 : 1,
                       ),
                       boxShadow: [
                         if (isSelected)
                           BoxShadow(
-                            color: network['color'].withOpacity(0.3),
+                            color: Color(network['color']).withOpacity(0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -158,30 +164,54 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 50,
+                          height: 50,
                           decoration: BoxDecoration(
-                            color: network['color'],
-                            borderRadius: BorderRadius.circular(8),
+                            color: Color(network['color']),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
                             Icons.sim_card,
                             color: Colors.white,
-                            size: 24,
+                            size: 28,
                           ),
                         ),
                         
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         
                         Text(
                           network['name'],
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? network['color'] : AppConstants.textPrimary,
+                            color: isSelected 
+                                ? Color(network['color']) 
+                                : AppTheme.textPrimary,
                             fontFamily: 'Cairo',
                           ),
+                          textAlign: TextAlign.center,
                         ),
+                        
+                        if (!network['isActive'])
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8, 
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.errorColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'غير متاح',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -192,92 +222,110 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
             const SizedBox(height: 32),
             
             // Value Selection
-            const Text(
-              'اختر فئة الكرت',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.textPrimary,
-                fontFamily: 'Cairo',
+            if (selectedProvider != null) ...[
+              const Text(
+                'اختر فئة الكرت',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                  fontFamily: 'Cairo',
+                ),
               ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.5,
-              ),
-              itemCount: AppConstants.cardValues.length,
-              itemBuilder: (context, index) {
-                final value = AppConstants.cardValues[index];
-                final isSelected = selectedValue == value;
-                
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      selectedValue = value;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppConstants.primaryColor.withOpacity(0.1) : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? AppConstants.primaryColor : Colors.grey[300]!,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: [
-                        if (isSelected)
-                          BoxShadow(
-                            color: AppConstants.primaryColor.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                      ],
+              
+              const SizedBox(height: 16),
+              
+              Builder(
+                builder: (context) {
+                  final network = AppConfig.supportedNetworks
+                      .firstWhere((n) => n['id'] == selectedProvider);
+                  final supportedAmounts = List<int>.from(network['supportedAmounts']);
+                  
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.5,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$value',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? AppConstants.primaryColor : AppConstants.textPrimary,
-                            fontFamily: 'Cairo',
+                    itemCount: supportedAmounts.length,
+                    itemBuilder: (context, index) {
+                      final value = supportedAmounts[index];
+                      final isSelected = selectedValue == value;
+                      
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            selectedValue = value;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? AppTheme.primaryColor.withOpacity(0.1) 
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected 
+                                  ? AppTheme.primaryColor 
+                                  : Colors.grey[300]!,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            boxShadow: [
+                              if (isSelected)
+                                BoxShadow(
+                                  color: AppTheme.primaryColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '$value',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected 
+                                      ? AppTheme.primaryColor 
+                                      : AppTheme.textPrimary,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                              Text(
+                                'ريال',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isSelected 
+                                      ? AppTheme.primaryColor 
+                                      : AppTheme.textSecondary,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Text(
-                          'ريال',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isSelected ? AppConstants.primaryColor : AppConstants.textSecondary,
-                            fontFamily: 'Cairo',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
             
             const SizedBox(height: 32),
             
             // Summary Card
-            if (selectedNetwork != null && selectedValue != null)
+            if (selectedProvider != null && selectedValue != null) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppConstants.backgroundColor,
+                  color: AppTheme.backgroundColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey[300]!),
                 ),
@@ -289,7 +337,7 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppConstants.textPrimary,
+                        color: AppTheme.textPrimary,
                         fontFamily: 'Cairo',
                       ),
                     ),
@@ -300,15 +348,15 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'الشبكة:',
+                          'المزود:',
                           style: TextStyle(
-                            color: AppConstants.textSecondary,
+                            color: AppTheme.textSecondary,
                             fontFamily: 'Cairo',
                           ),
                         ),
                         Text(
-                          AppConstants.networkTypes
-                              .firstWhere((n) => n['id'] == selectedNetwork)['name'],
+                          AppConfig.supportedNetworks
+                              .firstWhere((n) => n['id'] == selectedProvider)['name'],
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
@@ -325,7 +373,7 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                         const Text(
                           'الفئة:',
                           style: TextStyle(
-                            color: AppConstants.textSecondary,
+                            color: AppTheme.textSecondary,
                             fontFamily: 'Cairo',
                           ),
                         ),
@@ -349,7 +397,7 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppConstants.textPrimary,
+                            color: AppTheme.textPrimary,
                             fontFamily: 'Cairo',
                           ),
                         ),
@@ -358,7 +406,7 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppConstants.primaryColor,
+                            color: AppTheme.primaryColor,
                             fontFamily: 'Cairo',
                           ),
                         ),
@@ -367,6 +415,41 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                   ],
                 ),
               ),
+              
+              const SizedBox(height: 24),
+              
+              // Warning Note
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.warningColor.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AppTheme.warningColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'سيتم إرسال كود الكرت إلى رقم هاتفك المسجل عبر الرسائل النصية فور تأكيد العملية.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             
             const SizedBox(height: 32),
             
@@ -374,11 +457,13 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (selectedNetwork != null && selectedValue != null && !isLoading)
+                onPressed: (selectedProvider != null && 
+                           selectedValue != null && 
+                           !isLoading)
                     ? _handlePurchase
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppConstants.primaryColor,
+                  backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -405,6 +490,8 @@ class _NetworkRechargeScreenState extends ConsumerState<NetworkRechargeScreen> {
                       ),
               ),
             ),
+            
+            const SizedBox(height: 20),
           ],
         ),
       ),

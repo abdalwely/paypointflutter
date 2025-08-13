@@ -96,7 +96,7 @@ class _AddSchoolTabState extends ConsumerState<_AddSchoolTab> {
       final school = SchoolModel(
         id: '',
         name: _nameController.text.trim(),
-        code: _codeController.text.trim(),
+        nameEn: _nameController.text.trim(), // إضافة الاسم الإنجليزي (نفس الاسم العربي مؤقتاً)
         address: _addressController.text.trim(),
         phone: _phoneController.text.trim(),
         email: _emailController.text.trim(),
@@ -389,7 +389,7 @@ class _SchoolsListTab extends ConsumerWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'قم بإضافة مدرسة من التبويب الأول',
+                  'قم بإضافة مدرسة من التبو��ب الأول',
                   style: TextStyle(
                     color: AppConstants.textSecondary,
                     fontFamily: 'Cairo',
@@ -485,7 +485,7 @@ class _SchoolsListTab extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'رمز: ${school.code}',
+                        'معرف: ${school.id}',
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppConstants.textSecondary,
@@ -525,7 +525,7 @@ class _SchoolsListTab extends ConsumerWidget {
             const SizedBox(height: 8),
             _buildDetailRow(Icons.phone, 'الهاتف', school.phone),
             const SizedBox(height: 8),
-            _buildDetailRow(Icons.email, 'البريد الإلكتروني', school.email),
+
             
             const SizedBox(height: 16),
             

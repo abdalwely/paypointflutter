@@ -201,18 +201,18 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                   backgroundColor: Colors.white,
                   child: currentUser?.photoUrl != null
                       ? ClipOval(
-                          child: Image.network(
-                            currentUser!.photoUrl!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
-                        )
+                    child: Image.network(
+                      currentUser!.photoUrl!,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                    ),
+                  )
                       : const Icon(
-                          Icons.person,
-                          color: AppTheme.primaryColor,
-                          size: 30,
-                        ),
+                    Icons.person,
+                    color: AppTheme.primaryColor,
+                    size: 30,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -240,8 +240,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
               ),
             ],
           ),
-          ),
-          
+
           // Actions
           Row(
             children: [
@@ -257,9 +256,8 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                   size: 20,
                 ),
               ),
-              
               const SizedBox(width: 8),
-              
+
               // Notifications
               AnimatedButton(
                 onPressed: _showNotifications,
@@ -284,24 +282,23 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                   ],
                 ),
               ),
-              
               const SizedBox(width: 8),
-              
+
               // Admin Panel (if admin)
               currentUser?.isAdmin == true
                   ? AnimatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed(
-                          AdminDashboardScreen.routeName,
-                        );
-                      },
-                      backgroundColor: AppTheme.accentColor,
-                      child: const Icon(
-                        Icons.admin_panel_settings,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    )
+                onPressed: () {
+                  Navigator.of(context).pushNamed(
+                    AdminDashboardScreen.routeName,
+                  );
+                },
+                backgroundColor: AppTheme.accentColor,
+                child: const Icon(
+                  Icons.admin_panel_settings,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              )
                   : const SizedBox.shrink(),
             ],
           ),

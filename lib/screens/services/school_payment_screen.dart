@@ -51,7 +51,8 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
       return;
     }
 
-    final currentUser = await ref.read(currentUserProvider.future);
+    final currentUserAsync = ref.read(authControllerProvider);
+    final currentUser = currentUserAsync.value;
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -201,7 +202,7 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                 data: (schools) => DropdownButtonFormField<SchoolModel>(
                   value: selectedSchool,
                   decoration: InputDecoration(
-                    hintText: 'اختر المدرسة',
+                    hintText: '��ختر المدرسة',
                     prefixIcon: const Icon(Icons.school),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),

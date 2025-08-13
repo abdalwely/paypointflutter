@@ -14,7 +14,7 @@ class AdminDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserAsync = ref.watch(currentUserAsyncProvider);
     final cardStatsAsync = ref.watch(cardStatisticsProvider);
 
     return Scaffold(
@@ -199,7 +199,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 
                 _buildManagementCard(
                   icon: Icons.people,
-                  title: 'إدارة المستخدمين',
+                  title: 'إدارة الم��تخدمين',
                   subtitle: 'عرض وإدارة حسابات المستخدمين',
                   color: AppConstants.warningColor,
                   onTap: () {

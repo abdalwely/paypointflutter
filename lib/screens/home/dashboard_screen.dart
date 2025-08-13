@@ -17,7 +17,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserAsync = ref.watch(currentUserAsyncProvider);
 
     return Scaffold(
       body: Container(

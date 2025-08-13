@@ -265,4 +265,41 @@ class AppConfig {
   static Future<void> resetToDefaults() async {
     // Reset all configurations to default values
   }
+
+  // Get supported amounts for a network provider
+  static List<int> getSupportedAmounts(String providerId) {
+    try {
+      final provider = supportedNetworks.firstWhere(
+        (network) => network['id'] == providerId,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (provider.isNotEmpty && provider['supportedAmounts'] != null) {
+        return List<int>.from(provider['supportedAmounts']);
+      }
+
+      // Default amounts if provider not found
+      return [500, 1000, 2000, 5000, 10000];
+    } catch (e) {
+      return [500, 1000, 2000, 5000, 10000];
+    }
+  }
+
+  // Get network provider by ID
+  static Map<String, dynamic> getNetworkProvider(String providerId) {
+    try {
+      return supportedNetworks.firstWhere(
+        (network) => network['id'] == providerId,
+        orElse: () => <String, dynamic>{},
+      );
+    } catch (e) {
+      return <String, dynamic>{};
+    }
+  }
+
+  // Check if amount is valid for provider
+  static bool isValidAmount(String providerId, int amount) {
+    final supportedAmounts = getSupportedAmounts(providerId);
+    return supportedAmounts.contains(amount);
+  }
 }

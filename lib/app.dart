@@ -10,7 +10,9 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/home/enhanced_dashboard_screen.dart';
+import 'screens/home/futuristic_dashboard_screen.dart';
 import 'screens/services/network_recharge_screen.dart';
+import 'screens/services/futuristic_network_recharge_screen.dart';
 import 'screens/services/electricity_payment_screen.dart';
 import 'screens/services/water_payment_screen.dart';
 import 'screens/services/school_payment_screen.dart';
@@ -144,10 +146,19 @@ class PayPointApp extends ConsumerWidget {
         page = const EnhancedDashboardScreen();
         transitionType = PageTransitionType.fade;
         break;
+
+      case FuturisticDashboardScreen.routeName:
+        page = const FuturisticDashboardScreen();
+        transitionType = PageTransitionType.fade;
+        break;
         
       // Services
       case NetworkRechargeScreen.routeName:
         page = const NetworkRechargeScreen();
+        break;
+
+      case FuturisticNetworkRechargeScreen.routeName:
+        page = const FuturisticNetworkRechargeScreen();
         break;
         
       case ElectricityPaymentScreen.routeName:

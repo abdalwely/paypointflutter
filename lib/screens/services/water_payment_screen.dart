@@ -39,7 +39,8 @@ class _WaterPaymentScreenState extends ConsumerState<WaterPaymentScreen> {
   void _handlePayment() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final currentUser = await ref.read(currentUserProvider.future);
+    final currentUserAsync = ref.read(authControllerProvider);
+    final currentUser = currentUserAsync.value;
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -232,7 +233,7 @@ class _WaterPaymentScreenState extends ConsumerState<WaterPaymentScreen> {
                     return 'يرجى إدخال رقم الحساب';
                   }
                   if (value.length < 6) {
-                    return 'رقم الحساب يجب أن يكون 6 أرقام على الأقل';
+                    return 'رقم الحساب يجب أن ��كون 6 أرقام على الأقل';
                   }
                   return null;
                 },
@@ -268,7 +269,7 @@ class _WaterPaymentScreenState extends ConsumerState<WaterPaymentScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'يرجى إدخال المبلغ';
+                    return 'يرجى إدخال المب��غ';
                   }
                   final amount = double.tryParse(value);
                   if (amount == null || amount <= 0) {
