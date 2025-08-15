@@ -462,6 +462,82 @@ class _FuturisticDashboardScreenState extends ConsumerState<FuturisticDashboardS
                     ],
                   ),
                 ),
+                const SizedBox(height: 20),
+                // إضافة أزرار شحن المحفظة
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          print('🔄 [FuturisticDashboard] Opening wallet charge...');
+                          Navigator.of(context).pushNamed('/wallet-charge');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00FF80), Color(0xFF00CC66)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF00FF80).withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add, color: Colors.black, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'شحن المحفظة',
+                                style: TextStyle(
+                                  fontSize: isTablet ? 16 : 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFF00F5FF).withOpacity(0.3),
+                            width: 1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white.withOpacity(0.05),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.send, color: Color(0xFF00F5FF), size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تحويل',
+                              style: TextStyle(
+                                fontSize: isTablet ? 16 : 14,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF00F5FF),
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -492,7 +568,7 @@ class _FuturisticDashboardScreenState extends ConsumerState<FuturisticDashboardS
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'شحن الواي فاي السريع',
+                    'شحن الواي فا�� السريع',
                     style: TextStyle(
                       fontSize: isTablet ? 24 : 20,
                       fontWeight: FontWeight.bold,
@@ -693,21 +769,21 @@ class _FuturisticDashboardScreenState extends ConsumerState<FuturisticDashboardS
         'subtitle': 'دفع فواتير الكهرباء',
         'icon': Icons.electrical_services,
         'color': const Color(0xFFFF6B35),
-        'route': ElectricityPaymentScreen.routeName,
+        'route': '/futuristic-electricity-payment',
       },
       {
         'title': 'دفع المياه',
         'subtitle': 'فواتير المياه والصرف',
         'icon': Icons.water_drop,
         'color': const Color(0xFF4ECDC4),
-        'route': WaterPaymentScreen.routeName,
+        'route': '/futuristic-water-payment',
       },
       {
         'title': 'رسوم المدارس',
         'subtitle': 'دفع رسوم التعليم',
         'icon': Icons.school,
         'color': const Color(0xFF45B7D1),
-        'route': SchoolPaymentScreen.routeName,
+        'route': '/futuristic-school-payment',
       },
       {
         'title': 'سجل المعاملات',

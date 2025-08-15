@@ -14,8 +14,12 @@ import 'screens/home/futuristic_dashboard_screen.dart';
 import 'screens/services/network_recharge_screen.dart';
 import 'screens/services/futuristic_network_recharge_screen.dart';
 import 'screens/services/electricity_payment_screen.dart';
+import 'screens/services/futuristic_electricity_payment_screen.dart';
 import 'screens/services/water_payment_screen.dart';
+import 'screens/services/futuristic_water_payment_screen.dart';
 import 'screens/services/school_payment_screen.dart';
+import 'screens/services/futuristic_school_payment_screen.dart';
+import 'screens/wallet/wallet_charge_screen.dart';
 import 'screens/transactions/transactions_screen.dart';
 import 'screens/transactions/transaction_result_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -172,7 +176,25 @@ class PayPointApp extends ConsumerWidget {
       case SchoolPaymentScreen.routeName:
         page = const SchoolPaymentScreen();
         break;
-        
+
+      // Futuristic Services
+      case '/futuristic-electricity-payment':
+        page = const FuturisticElectricityPaymentScreen();
+        break;
+
+      case '/futuristic-water-payment':
+        page = const FuturisticWaterPaymentScreen();
+        break;
+
+      case '/futuristic-school-payment':
+        page = const FuturisticSchoolPaymentScreen();
+        break;
+
+      // Wallet
+      case '/wallet-charge':
+        page = const WalletChargeScreen();
+        break;
+
       // Transactions
       case TransactionsScreen.routeName:
         page = const TransactionsScreen();

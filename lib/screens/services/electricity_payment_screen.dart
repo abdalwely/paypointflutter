@@ -5,7 +5,7 @@ import '../../providers/auth_provider.dart';
 
 class ElectricityPaymentScreen extends ConsumerStatefulWidget {
   static const String routeName = '/electricity-payment';
-  
+
   const ElectricityPaymentScreen({super.key});
 
   @override
@@ -35,7 +35,7 @@ class _ElectricityPaymentScreenState extends ConsumerState<ElectricityPaymentScr
     try {
       // محاكاة استعلام العداد
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() {
         meterInfo = {
           'meterNumber': _meterNumberController.text,
@@ -70,7 +70,7 @@ class _ElectricityPaymentScreenState extends ConsumerState<ElectricityPaymentScr
     try {
       // محاكاة عملية الدفع
       await Future.delayed(const Duration(seconds: 3));
-      
+
       if (mounted) {
         _showSuccessDialog();
       }
@@ -312,7 +312,7 @@ class _ElectricityPaymentScreenState extends ConsumerState<ElectricityPaymentScr
                   itemBuilder: (context, index) {
                     final amount = quickAmounts[index];
                     final isSelected = selectedAmount == amount;
-                    
+
                     return InkWell(
                       onTap: () {
                         setState(() {
@@ -322,13 +322,13 @@ class _ElectricityPaymentScreenState extends ConsumerState<ElectricityPaymentScr
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isSelected 
-                              ? AppTheme.warningColor.withOpacity(0.1) 
+                          color: isSelected
+                              ? AppTheme.warningColor.withOpacity(0.1)
                               : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected 
-                                ? AppTheme.warningColor 
+                            color: isSelected
+                                ? AppTheme.warningColor
                                 : Colors.grey[300]!,
                             width: isSelected ? 2 : 1,
                           ),
@@ -341,8 +341,8 @@ class _ElectricityPaymentScreenState extends ConsumerState<ElectricityPaymentScr
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: isSelected 
-                                    ? AppTheme.warningColor 
+                                color: isSelected
+                                    ? AppTheme.warningColor
                                     : AppTheme.textPrimary,
                                 fontFamily: 'Cairo',
                               ),
@@ -351,8 +351,8 @@ class _ElectricityPaymentScreenState extends ConsumerState<ElectricityPaymentScr
                               'ريال',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isSelected 
-                                    ? AppTheme.warningColor 
+                                color: isSelected
+                                    ? AppTheme.warningColor
                                     : AppTheme.textSecondary,
                                 fontFamily: 'Cairo',
                               ),

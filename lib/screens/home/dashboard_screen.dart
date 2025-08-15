@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
+import '../services/futuristic_school_payment_screen.dart';
 import '../services/network_recharge_screen.dart';
 import '../services/electricity_payment_screen.dart';
 import '../services/water_payment_screen.dart';
@@ -260,7 +261,7 @@ class DashboardScreen extends ConsumerWidget {
                               icon: Icons.school,
                               color: AppConstants.successColor,
                               onTap: () => Navigator.of(context).pushNamed(
-                                SchoolPaymentScreen.routeName,
+                                FuturisticSchoolPaymentScreen.routeName,
                               ),
                             ),
                           ],

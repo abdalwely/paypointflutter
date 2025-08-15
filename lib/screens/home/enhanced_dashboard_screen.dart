@@ -18,7 +18,7 @@ import '../admin/admin_dashboard_screen.dart';
 
 class EnhancedDashboardScreen extends ConsumerStatefulWidget {
   static const String routeName = '/enhanced-dashboard';
-  
+
   const EnhancedDashboardScreen({super.key});
 
   @override
@@ -78,7 +78,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
           _buildProfilePage(),
         ],
       ),
-      
+
       // Custom Bottom Navigation Bar
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
@@ -101,7 +101,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
           ),
         ],
       ),
-      
+
       // Floating Action Button
       floatingActionButton: AnimatedBuilder(
         animation: _fabAnimation,
@@ -149,31 +149,31 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                 delay: const Duration(milliseconds: 200),
                 child: _buildHeader(context, ref),
               ),
-              
+
               // Balance Card
               SlideInContainer(
                 delay: const Duration(milliseconds: 400),
                 child: _buildBalanceCard(context, ref),
               ),
-              
+
               // Quick Actions
               SlideInContainer(
                 delay: const Duration(milliseconds: 600),
                 child: _buildQuickActions(context),
               ),
-              
+
               // Services Grid
               SlideInContainer(
                 delay: const Duration(milliseconds: 800),
                 child: _buildServicesGrid(context),
               ),
-              
+
               // Recent Transactions
               SlideInContainer(
                 delay: const Duration(milliseconds: 1000),
                 child: _buildRecentTransactions(context),
               ),
-              
+
               const SizedBox(height: 100), // Space for bottom nav
             ],
           ),
@@ -357,9 +357,9 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -534,7 +534,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
           ),
           const SizedBox(height: 16),
           StaggeredContainer(
-            children: services.map((service) => 
+            children: services.map((service) =>
               _buildServiceCard(service)).toList(),
           ),
         ],
@@ -637,7 +637,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
             ),
             const SizedBox(height: 12),
             // Placeholder for recent transactions
-            ...List.generate(3, (index) => 
+            ...List.generate(3, (index) =>
               _buildTransactionItem(index)),
           ],
         ),
@@ -649,7 +649,7 @@ class _EnhancedDashboardScreenState extends ConsumerState<EnhancedDashboardScree
     final types = ['شحن كرت شبكة', 'شحن كهرباء', 'دفع فاتورة مياه'];
     final amounts = ['1000', '500', '250'];
     final colors = [AppTheme.successColor, AppTheme.warningColor, AppTheme.infoColor];
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),

@@ -9,7 +9,7 @@ import '../transactions/transaction_result_screen.dart';
 
 class SchoolPaymentScreen extends ConsumerStatefulWidget {
   static const String routeName = '/school-payment';
-  
+
   const SchoolPaymentScreen({super.key});
 
   @override
@@ -40,7 +40,7 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
 
   void _handlePayment() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (selectedSchool == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -153,9 +153,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                         size: 28,
                       ),
                     ),
-                    
+
                     const SizedBox(width: 16),
-                    
+
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,9 +182,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // School Selection
               const Text(
                 'اختر المدرسة',
@@ -195,9 +195,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   fontFamily: 'Cairo',
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               schoolsAsync.when(
                 data: (schools) => DropdownButtonFormField<SchoolModel>(
                   value: selectedSchool,
@@ -260,9 +260,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Student Name Field
               const Text(
                 'اسم الطالب',
@@ -273,9 +273,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   fontFamily: 'Cairo',
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               TextFormField(
                 controller: _studentNameController,
                 decoration: InputDecoration(
@@ -294,9 +294,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Student ID Field
               const Text(
                 'رقم الطالب',
@@ -307,9 +307,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   fontFamily: 'Cairo',
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               TextFormField(
                 controller: _studentIdController,
                 keyboardType: TextInputType.number,
@@ -329,9 +329,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Amount Field
               const Text(
                 'مبلغ الرسوم',
@@ -342,9 +342,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   fontFamily: 'Cairo',
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
@@ -372,9 +372,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Quick Amount Buttons
               const Text(
                 'مبالغ سريعة',
@@ -385,9 +385,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   fontFamily: 'Cairo',
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -414,9 +414,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                   );
                 }).toList(),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Payment Button
               SizedBox(
                 width: double.infinity,
@@ -450,9 +450,9 @@ class _SchoolPaymentScreenState extends ConsumerState<SchoolPaymentScreen> {
                         ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Note
               Container(
                 width: double.infinity,

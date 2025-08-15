@@ -1,552 +1,837 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/config/app_config.dart';
-import '../../widgets/animated_widgets.dart';
-import '../home/enhanced_dashboard_screen.dart';
+import 'dart:math' as math;
+import 'dart:ui';
 
-class TransactionResultScreen extends ConsumerStatefulWidget {
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/logger.dart';
+import '../../core/utils/responsive_utils.dart';
+import '../home/futuristic_dashboard_screen.dart';
+
+class TransactionResultScreen extends StatefulWidget {
   static const String routeName = '/transaction-result';
-  
+
   const TransactionResultScreen({super.key});
 
   @override
-  ConsumerState<TransactionResultScreen> createState() => _TransactionResultScreenState();
+  State<TransactionResultScreen> createState() => _TransactionResultScreenState();
 }
 
-class _TransactionResultScreenState extends ConsumerState<TransactionResultScreen>
+class _TransactionResultScreenState extends State<TransactionResultScreen> 
     with TickerProviderStateMixin {
-  late AnimationController _successController;
-  late AnimationController _cardController;
-  late Animation<double> _successAnimation;
-  late Animation<Offset> _cardSlideAnimation;
   
-  Map<String, dynamic>? transactionData;
+  late AnimationController _mainController;
+  late AnimationController _pulseController;
+  late AnimationController _rotationController;
+  late AnimationController _sparkleController;
+
+  late Animation<double> _fadeInAnimation;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _sparkleAnimation;
+
+  bool _isSuccess = true;
+  String _title = '';
+  double _amount = 0.0;
+  String _type = '';
+  Map<String, dynamic>? _details;
 
   @override
   void initState() {
     super.initState();
+    AppLogger.logScreenEntry('TransactionResult');
     _setupAnimations();
-  }
-
-  void _setupAnimations() {
-    _successController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    _cardController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
-    _successAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _successController, curve: Curves.elasticOut),
-    );
-
-    _cardSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _cardController, curve: Curves.easeOut));
-
-    // Start animations
-    _successController.forward();
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _cardController.forward();
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (transactionData == null) {
-      transactionData = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      _isSuccess = args['success'] ?? true;
+      _title = args['title'] ?? '';
+      _amount = args['amount'] ?? 0.0;
+      _type = args['type'] ?? '';
+      _details = args['details'];
+    }
+  }
+
+  void _setupAnimations() {
+    _mainController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _sparkleController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.4, 1.0, curve: Curves.bounceOut),
+      ),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _rotationController, curve: Curves.linear),
+    );
+
+    _sparkleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _sparkleController, curve: Curves.easeInOut),
+    );
+
+    _startAnimations();
+  }
+
+  void _startAnimations() {
+    _mainController.forward();
+    _pulseController.repeat(reverse: true);
+    _rotationController.repeat();
+    _sparkleController.repeat(reverse: true);
+    
+    // Add haptic feedback for success
+    if (_isSuccess) {
+      HapticFeedback.mediumImpact();
     }
   }
 
   @override
   void dispose() {
-    _successController.dispose();
-    _cardController.dispose();
+    _mainController.dispose();
+    _pulseController.dispose();
+    _rotationController.dispose();
+    _sparkleController.dispose();
     super.dispose();
-  }
-
-  void _copyToClipboard(String text, String label) {
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم نسخ $label'),
-        backgroundColor: AppTheme.successColor,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _shareResult() {
-    if (transactionData != null) {
-      final provider = _getProviderNameAr(transactionData!['provider']);
-      final value = transactionData!['value'];
-      final code = transactionData!['cardCode'];
-      final serial = transactionData!['cardSerial'];
-      
-      final text = '''🎉 تم شراء كرت $provider بقيمة $value ريال بنجاح!
-
-💳 كود الكرت: $code
-${serial != null ? '🔢 الرقم المسلسل: $serial' : ''}
-
-📱 PayPoint - خدمات الدفع الإلكتروني''';
-      
-      // Here you would implement actual sharing
-      _copyToClipboard(text, 'معلومات الكرت');
-    }
-  }
-
-  String _getProviderNameAr(String? provider) {
-    if (provider == null) return '';
-    final network = AppConfig.supportedNetworks
-        .firstWhere((n) => n['id'] == provider, orElse: () => {'name': provider});
-    return network['name'] ?? provider;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isSuccess = transactionData?['isSuccess'] ?? false;
-    
+    final isTablet = ResponsiveUtils.isTablet(context);
+
     return Scaffold(
-      backgroundColor: isSuccess ? AppTheme.successColor : AppTheme.errorColor,
-      body: SafeArea(
+      backgroundColor: const Color(0xFF0A0A0A),
+      body: Stack(
+        children: [
+          _buildAnimatedBackground(),
+          if (_isSuccess) _buildSuccessParticles(),
+          SafeArea(
+            child: AnimatedBuilder(
+              animation: _fadeInAnimation,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _fadeInAnimation.value,
+                  child: Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: _buildContent(context, isTablet),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    final colors = _isSuccess
+        ? [
+            const Color(0xFF0A0A0A),
+            const Color(0xFF1A3E1A),
+            const Color(0xFF2E4E2E),
+            const Color(0xFF1A5A1A),
+          ]
+        : [
+            const Color(0xFF0A0A0A),
+            const Color(0xFF3E1A1A),
+            const Color(0xFF4E2E2E),
+            const Color(0xFF5A1A1A),
+          ];
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+          stops: const [0.0, 0.3, 0.7, 1.0],
+        ),
+      ),
+      child: AnimatedBuilder(
+        animation: _rotationAnimation,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: ResultBackgroundPainter(
+              _rotationAnimation.value,
+              _isSuccess,
+            ),
+            size: Size.infinite,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSuccessParticles() {
+    return AnimatedBuilder(
+      animation: _sparkleAnimation,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: SuccessParticlesPainter(_sparkleAnimation.value),
+          size: Size.infinite,
+        );
+      },
+    );
+  }
+
+  Widget _buildContent(BuildContext context, bool isTablet) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(isTablet ? 32 : 24),
         child: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'نتيجة المعاملة',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                      EnhancedDashboardScreen.routeName,
-                      (route) => false,
-                    ),
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Success/Error Animation
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 40),
-                    
-                    // Success/Error Icon
-                    AnimatedBuilder(
-                      animation: _successAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _successAnimation.value,
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: isSuccess 
-                                  ? AppTheme.successColor.withOpacity(0.1)
-                                  : AppTheme.errorColor.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isSuccess ? Icons.check_circle : Icons.error,
-                              size: 50,
-                              color: isSuccess ? AppTheme.successColor : AppTheme.errorColor,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 20),
-                    
-                    // Status Text
-                    Text(
-                      isSuccess ? 'تمت العملية بنجاح!' : 'فشلت العملية!',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isSuccess ? AppTheme.successColor : AppTheme.errorColor,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // Message
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        transactionData?['message'] ?? 
-                        (isSuccess ? 'تم شراء الكرت بنجاح' : 'حدث خطأ في العملية'),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                          fontFamily: 'Cairo',
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 30),
-                    
-                    // Card Details (if success and has card info)
-                    if (isSuccess && transactionData?['cardCode'] != null)
-                      SlideTransition(
-                        position: _cardSlideAnimation,
-                        child: _buildCardDetails(),
-                      ),
-                    
-                    // Transaction Details
-                    Expanded(
-                      child: SlideTransition(
-                        position: _cardSlideAnimation,
-                        child: _buildTransactionDetails(),
-                      ),
-                    ),
-                    
-                    // Action Buttons
-                    _buildActionButtons(isSuccess),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 40),
+            _buildResultIcon(isTablet),
+            const SizedBox(height: 32),
+            _buildResultTitle(isTablet),
+            const SizedBox(height: 16),
+            _buildAmountDisplay(isTablet),
+            const SizedBox(height: 32),
+            _buildDetailsCard(isTablet),
+            const SizedBox(height: 40),
+            _buildActionButtons(context, isTablet),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCardDetails() {
-    final cardCode = transactionData!['cardCode'];
-    final cardSerial = transactionData!['cardSerial'];
-    
+  Widget _buildResultIcon(bool isTablet) {
+    final color = _isSuccess ? const Color(0xFF28A745) : const Color(0xFFDC3545);
+    final icon = _isSuccess ? Icons.check_circle : Icons.error;
+
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _pulseAnimation.value,
+                child: Container(
+                  width: isTablet ? 120 : 100,
+                  height: isTablet ? 120 : 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        color.withOpacity(0.8),
+                        color.withOpacity(0.4),
+                        color.withOpacity(0.1),
+                      ],
+                      stops: const [0.0, 0.7, 1.0],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.5),
+                        blurRadius: 30,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    icon,
+                    size: isTablet ? 60 : 50,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildResultTitle(bool isTablet) {
+    return Text(
+      _title.isNotEmpty ? _title : (_isSuccess ? 'تمت العملية بنجا��' : 'فشلت العملية'),
+      style: TextStyle(
+        fontSize: isTablet ? 28 : 24,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        fontFamily: 'Cairo',
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildAmountDisplay(bool isTablet) {
+    if (_amount <= 0) return const SizedBox.shrink();
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 24 : 20,
+        vertical: isTablet ? 16 : 12,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withOpacity(0.8),
-          ],
+          colors: _isSuccess
+              ? [
+                  const Color(0xFF28A745).withOpacity(0.2),
+                  const Color(0xFF20C997).withOpacity(0.1),
+                ]
+              : [
+                  const Color(0xFFDC3545).withOpacity(0.2),
+                  const Color(0xFFFF6B6B).withOpacity(0.1),
+                ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _isSuccess 
+              ? const Color(0xFF28A745).withOpacity(0.3)
+              : const Color(0xFFDC3545).withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.monetization_on,
+            color: _isSuccess ? const Color(0xFF28A745) : const Color(0xFFDC3545),
+            size: isTablet ? 24 : 20,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${_amount.toStringAsFixed(0)} ريال',
+            style: TextStyle(
+              fontSize: isTablet ? 24 : 20,
+              fontWeight: FontWeight.bold,
+              color: _isSuccess ? const Color(0xFF28A745) : const Color(0xFFDC3545),
+              fontFamily: 'Cairo',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailsCard(bool isTablet) {
+    if (_details == null || _details!.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isTablet ? 24 : 20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(
-                Icons.credit_card,
-                color: Colors.white,
-                size: 24,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'معلومات الكرت',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Card Code
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-              ),
+          Text(
+            'تفاصيل العملية',
+            style: TextStyle(
+              fontSize: isTablet ? 20 : 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Cairo',
             ),
+          ),
+          const SizedBox(height: 16),
+          ..._buildDetailItems(isTablet),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildDetailItems(bool isTablet) {
+    final items = <Widget>[];
+    
+    _details!.forEach((key, value) {
+      if (value != null && value.toString().isNotEmpty) {
+        final label = _getDetailLabel(key);
+        items.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'كود الكرت',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        cardCode,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
+                  flex: 2,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: isTablet ? 16 : 14,
+                      color: Colors.white70,
+                      fontFamily: 'Cairo',
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => _copyToClipboard(cardCode, 'كود الكرت'),
-                  icon: const Icon(
-                    Icons.copy,
-                    color: Colors.white,
-                    size: 20,
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    value.toString(),
+                    style: TextStyle(
+                      fontSize: isTablet ? 16 : 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'Cairo',
+                    ),
+                    textAlign: TextAlign.end,
                   ),
                 ),
               ],
             ),
           ),
-          
-          // Serial Number (if available)
-          if (cardSerial != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+        );
+      }
+    });
+
+    // Add transaction type
+    items.add(
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                'نوع العملية',
+                style: TextStyle(
+                  fontSize: isTablet ? 16 : 14,
+                  color: Colors.white70,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                _getTransactionTypeName(_type),
+                style: TextStyle(
+                  fontSize: isTablet ? 16 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'Cairo',
+                ),
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Add timestamp
+    items.add(
+      Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              'وقت العملية',
+              style: TextStyle(
+                fontSize: isTablet ? 16 : 14,
+                color: Colors.white70,
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              _formatCurrentTime(),
+              style: TextStyle(
+                fontSize: isTablet ? 16 : 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Cairo',
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return items;
+  }
+
+  String _getDetailLabel(String key) {
+    switch (key) {
+      case 'account':
+        return 'رقم الحساب';
+      case 'student_id':
+        return 'رقم الطالب';
+      case 'student_name':
+        return 'اسم الطالب';
+      case 'region':
+        return 'المنطقة';
+      case 'company':
+        return 'الشركة';
+      case 'school':
+        return 'المدرسة';
+      case 'payment_type':
+        return 'نوع الرسوم';
+      case 'method':
+        return 'طريقة الدفع';
+      default:
+        return key;
+    }
+  }
+
+  String _getTransactionTypeName(String type) {
+    switch (type) {
+      case 'wallet_charge':
+        return 'شحن المحفظة';
+      case 'electricity_payment':
+        return 'دفع فاتورة الكهرباء';
+      case 'water_payment':
+        return 'دفع فاتورة المياه';
+      case 'school_payment':
+        return 'دفع رسوم المدرسة';
+      case 'network_recharge':
+        return 'شحن كروت الشبكة';
+      default:
+        return 'عملية أخرى';
+    }
+  }
+
+  String _formatCurrentTime() {
+    final now = DateTime.now();
+    return '${now.day}/${now.month}/${now.year} - ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildActionButtons(BuildContext context, bool isTablet) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _pulseAnimation.value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00F5FF), Color(0xFF0080FF)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00F5FF).withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        FuturisticDashboardScreen.routeName,
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: EdgeInsets.symmetric(vertical: isTablet ? 20 : 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      'العودة للرئيسية',
+                      style: TextStyle(
+                        fontSize: isTablet ? 20 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        
+        if (_isSuccess) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                // Share or download receipt functionality
+                _showShareOptions(context);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.3),
+                ),
+                padding: EdgeInsets.symmetric(vertical: isTablet ? 20 : 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'الرقم المسلسل',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                            fontFamily: 'Cairo',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          cardSerial,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
+                  Icon(
+                    Icons.share,
+                    size: isTablet ? 24 : 20,
                   ),
-                  IconButton(
-                    onPressed: () => _copyToClipboard(cardSerial, 'الرقم المسلسل'),
-                    icon: const Icon(
-                      Icons.copy,
-                      color: Colors.white,
-                      size: 20,
+                  const SizedBox(width: 8),
+                  Text(
+                    'مشاركة الإيصال',
+                    style: TextStyle(
+                      fontSize: isTablet ? 18 : 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransactionDetails() {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'تفاصيل المعاملة',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-              fontFamily: 'Cairo',
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          if (transactionData?['provider'] != null) ...[
-            _buildDetailRow(
-              'المزود',
-              _getProviderNameAr(transactionData!['provider']),
-            ),
-            const SizedBox(height: 12),
-          ],
-          
-          if (transactionData?['value'] != null) ...[
-            _buildDetailRow(
-              'القيمة',
-              '${transactionData!['value']} ريال',
-            ),
-            const SizedBox(height: 12),
-          ],
-          
-          if (transactionData?['transactionId'] != null) ...[
-            _buildDetailRow(
-              'رقم المعاملة',
-              transactionData!['transactionId'],
-            ),
-            const SizedBox(height: 12),
-          ],
-          
-          _buildDetailRow(
-            'التاريخ والوقت',
-            _formatDateTime(DateTime.now()),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            '$label:',
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 14,
-              fontFamily: 'Cairo',
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Cairo',
-            ),
-          ),
-        ),
       ],
     );
   }
 
-  Widget _buildActionButtons(bool isSuccess) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          if (isSuccess && transactionData?['cardCode'] != null) ...[
-            // Share Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _shareResult,
-                icon: const Icon(Icons.share, size: 18),
-                label: const Text(
-                  'مشاركة معلومات الكرت',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+  void _showShareOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF1A1A2E).withOpacity(0.9),
+              const Color(0xFF16213E).withOpacity(0.9),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF00F5FF).withOpacity(0.3),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'مشاركة الإيصال',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Cairo',
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildShareOption(
+                  Icons.file_download,
+                  'تحميل PDF',
+                  () {
+                    Navigator.pop(context);
+                    // Implement PDF download
+                  },
+                ),
+                _buildShareOption(
+                  Icons.share,
+                  'مشاركة',
+                  () {
+                    Navigator.pop(context);
+                    // Implement share functionality
+                  },
+                ),
+                _buildShareOption(
+                  Icons.print,
+                  'طباعة',
+                  () {
+                    Navigator.pop(context);
+                    // Implement print functionality
+                  },
+                ),
+              ],
+            ),
           ],
-          
-          // Back to Dashboard Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                EnhancedDashboardScreen.routeName,
-                (route) => false,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShareOption(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF00F5FF).withOpacity(0.2),
+              border: Border.all(
+                color: const Color(0xFF00F5FF),
+                width: 2,
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isSuccess 
-                    ? AppTheme.successColor 
-                    : AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'العودة للرئيسية',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xFF00F5FF),
+              size: 25,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white,
+              fontFamily: 'Cairo',
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  String _formatDateTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final formatter = 'yyyy/MM/dd - HH:mm';
-    return '${dateTime.year}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.day.toString().padLeft(2, '0')} - ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+// Custom painters for result screen effects
+class ResultBackgroundPainter extends CustomPainter {
+  final double animationValue;
+  final bool isSuccess;
+
+  ResultBackgroundPainter(this.animationValue, this.isSuccess);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = (isSuccess ? const Color(0xFF28A745) : const Color(0xFFDC3545))
+          .withOpacity(0.1);
+
+    // Draw result pattern
+    for (int i = 0; i < 15; i++) {
+      final offset = Offset(
+        (size.width * 0.1 * i) + (animationValue * 30),
+        (size.height * 0.1 * i) + (animationValue * 20),
+      );
+
+      if (isSuccess) {
+        // Draw success checkmark patterns
+        canvas.drawPath(
+          Path()
+            ..moveTo(offset.dx, offset.dy)
+            ..lineTo(offset.dx + 10, offset.dy + 10)
+            ..lineTo(offset.dx + 20, offset.dy - 5),
+          paint,
+        );
+      } else {
+        // Draw error X patterns
+        canvas.drawLine(
+          offset,
+          Offset(offset.dx + 15, offset.dy + 15),
+          paint,
+        );
+        canvas.drawLine(
+          Offset(offset.dx + 15, offset.dy),
+          Offset(offset.dx, offset.dy + 15),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(ResultBackgroundPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
+  }
+}
+
+class SuccessParticlesPainter extends CustomPainter {
+  final double animationValue;
+
+  SuccessParticlesPainter(this.animationValue);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF28A745).withOpacity(0.6);
+
+    // Draw success confetti
+    for (int i = 0; i < 50; i++) {
+      final x = (size.width * math.Random(i).nextDouble()) + 
+               (math.sin(animationValue * 2 * math.pi + i) * 20);
+      final y = (size.height * math.Random(i + 100).nextDouble()) + 
+               (math.cos(animationValue * 2 * math.pi + i) * 15);
+
+      canvas.drawCircle(
+        Offset(x, y),
+        1 + (math.sin(animationValue * 4 * math.pi + i) * 2),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(SuccessParticlesPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
   }
 }

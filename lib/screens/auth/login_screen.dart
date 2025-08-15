@@ -95,9 +95,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           );
 
       if (success && mounted) {
-        Navigator.of(context).pushReplacementNamed(
-          FuturisticDashboardScreen.routeName,
-        );
+        // انتظار تحميل بيانات المستخدم
+        final userAsync = ref.read(currentUserAsyncProvider);
+        final user = userAsync.value;
+
+        if (user != null) {
+          // التحقق من نوع المستخدم وتوجيهه للصفحة المناسبة
+          if (user.isAdmin) {
+            Navigator.of(context).pushReplacementNamed(
+              '/admin-dashboard',
+            );
+          } else {
+            Navigator.of(context).pushReplacementNamed(
+              FuturisticDashboardScreen.routeName,
+            );
+          }
+        } else {
+          Navigator.of(context).pushReplacementNamed(
+            FuturisticDashboardScreen.routeName,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

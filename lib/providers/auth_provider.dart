@@ -36,18 +36,21 @@ final userModelProvider = FutureProvider<UserModel?>((ref) async {
         if (userDoc.exists) {
           return UserModel.fromFirestore(userDoc);
         } else {
-          // إنشاء مستخدم جديد إذا لم يكن موجوداً
-          final newUser = UserModel(
-            uid: user.uid,
-            name: user.displayName ?? 'مستخدم جديد',
-            email: user.email ?? '',
-            phone: user.phoneNumber ?? '',
-            photoUrl: user.photoURL,
-            balance: 0.0,
-            isAdmin: false,
-            createdAt: DateTime.now(),
-            lastLoginAt: DateTime.now(),
-          );
+        // إنشاء مستخدم جديد إذا لم يكن موجوداً
+        final isAdminEmail = user.email == 'admin@paypoint.ye' ||
+                            user.email == 'admin@admin.com';
+
+        final newUser = UserModel(
+          uid: user.uid,
+          name: user.displayName ?? (isAdminEmail ? 'مسؤول النظام' : 'مستخدم جديد'),
+          email: user.email ?? '',
+          phone: user.phoneNumber ?? '',
+          photoUrl: user.photoURL,
+          balance: isAdminEmail ? 50000.0 : 1250.0,
+          isAdmin: isAdminEmail,
+          createdAt: DateTime.now(),
+          lastLoginAt: DateTime.now(),
+        );
           
           await FirebaseFirestore.instance
               .collection('users')
@@ -100,14 +103,17 @@ class AuthController extends StateNotifier<AsyncValue<UserModel?>> {
         return UserModel.fromFirestore(userDoc);
       } else {
         // إنشاء مستخدم جديد
+        final isAdminEmail = user.email == 'admin@paypoint.ye' ||
+                            user.email == 'admin@admin.com';
+
         final newUser = UserModel(
           uid: user.uid,
-          name: user.displayName ?? 'مستخدم جديد',
+          name: user.displayName ?? (isAdminEmail ? 'مسؤول النظام' : 'مستخدم جديد'),
           email: user.email ?? '',
           phone: user.phoneNumber ?? '',
           photoUrl: user.photoURL,
-          balance: 0.0,
-          isAdmin: false,
+          balance: isAdminEmail ? 50000.0 : 1250.0,
+          isAdmin: isAdminEmail,
           createdAt: DateTime.now(),
           lastLoginAt: DateTime.now(),
         );
@@ -120,7 +126,7 @@ class AuthController extends StateNotifier<AsyncValue<UserModel?>> {
         return newUser;
       }
     } catch (e) {
-      print('خطأ في جلب بيانات المستخدم: $e');
+      print('خطأ في جلب بيانات المس��خدم: $e');
       return null;
     }
   }
